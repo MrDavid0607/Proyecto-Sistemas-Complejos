@@ -21,6 +21,8 @@ El núcleo vive en `src/complexnet/` y se ejecuta como una red de nodos autónom
 | API de alto nivel | `node.py` (`Node`, `Task`) |
 
 La tarea de IA es una regresión lineal que cada nodo ejecuta sobre datos sintéticos generados con una semilla.
+**Video demostrativo de la Fase 2:** [ver / descargar (release `fase2-v1.0`)](https://github.com/MrDavid0607/Proyecto-Sistemas-Complejos/releases/tag/fase2-v1.0).
+
 Documentación: [arquitectura implementada](docs/arquitectura/ARQUITECTURA.md), [pruebas](docs/pruebas/PRUEBAS.md) y [guion de demostración](docs/DEMO.md).
 
 ### Uso rápido (sin Docker)
