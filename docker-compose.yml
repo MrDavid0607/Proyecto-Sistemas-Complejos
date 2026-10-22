@@ -1,0 +1,69 @@
+# Red ComplexNet de 3 nodos. Cada nodo se descubre por UDP broadcast
+# (dirección de broadcast de la subred), sin coordinador central.
+#
+#   docker compose up --build -d
+#   docker compose logs -f
+#   docker compose down
+
+x-node: &node
+  build: .
+  image: complexnet-node:latest
+  restart: "no"
+  environment: &node-env
+    NODE_PORT: "9999"
+    BROADCAST_ADDRESS: "172.30.77.255"
+    HTTP_PORT: "8000"
+    LOG_DIR: /app/logs
+    BEACON_INTERVAL: "2"
+    NODE_TIMEOUT: "5"
+
+services:
+  nodo-01:
+    <<: *node
+    container_name: complexnet-nodo-01
+    hostname: nodo-01
+    environment:
+      <<: *node-env
+      NODE_ID: nodo-01
+      BANDWIDTH_MBPS: "100"
+    ports: ["8001:8000"]
+    volumes: ["./logs:/app/logs"]
+    networks:
+      complexnet-net:
+        ipv4_address: 172.30.77.11
+
+  nodo-02:
+    <<: *node
+    container_name: complexnet-nodo-02
+    hostname: nodo-02
+    environment:
+      <<: *node-env
+      NODE_ID: nodo-02
+      BANDWIDTH_MBPS: "50"
+    ports: ["8002:8000"]
+    volumes: ["./logs:/app/logs"]
+    networks:
+      complexnet-net:
+        ipv4_address: 172.30.77.12
+
+  nodo-03:
+    <<: *node
+    container_name: complexnet-nodo-03
+    hostname: nodo-03
+    environment:
+      <<: *node-env
+      NODE_ID: nodo-03
+      BANDWIDTH_MBPS: "200"
+    ports: ["8003:8000"]
+    volumes: ["./logs:/app/logs"]
+    networks:
+      complexnet-net:
+        ipv4_address: 172.30.77.13
+
+networks:
+  complexnet-net:
+    name: complexnet-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.77.0/24

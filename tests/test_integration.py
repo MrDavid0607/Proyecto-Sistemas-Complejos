@@ -95,10 +95,9 @@ def test_tarea_ml_se_ejecuta_en_otro_nodo(network):
     assert emisor.metrics.snapshot()["tasks_completed"] == 1
 
 
-def test_asigna_al_nodo_con_mas_ancho_de_banda_si_el_resto_empata(network):
+def test_candidatos_remotos_excluyen_al_nodo_local(network):
     emisor = network[0]
     assert emisor.wait_for_peers(2, timeout=8)
-    # nodo-03 anuncia 200 Mbps frente a 50: gana salvo gran diferencia de CPU/RAM
     candidates = emisor.candidates(allow_local=False)
     best, scores = emisor.scheduler.select_node(candidates)
     assert best is not None and set(scores) == {"nodo-02", "nodo-03"}

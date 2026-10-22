@@ -4,6 +4,53 @@ Proyecto integrador de la asignatura **Sistemas Complejos**.
 
 ComplexNet API propone una arquitectura para computación descentralizada sobre redes Ad hoc, en la cual diferentes nodos pueden descubrirse, intercambiar información y mantener una visión local de los participantes activos de la red.
 
+## Fase 2 - Núcleo funcional (segundo corte)
+
+El núcleo vive en `src/complexnet/` y se ejecuta como una red de nodos autónomos, sin coordinador central:
+
+| Servicio | Módulo |
+|---|---|
+| Descubrimiento de nodos y `PeerTable` | `discovery/` |
+| Registro de recursos (CPU, RAM, ancho de banda, latencia, reputación) | `resources/`, `discovery/` |
+| Mensajería (UDP + JSON, interfaz abstracta) | `communication/` |
+| Planificador distribuido `F(i,j)` | `scheduler/` |
+| Gestión de tareas, ejecución de IA y reasignación | `tasks/` |
+| Detección de fallos (timeout 5 s) | `failure_detection/` |
+| Sincronización (reloj de Lamport) | `synchronization/` |
+| Registro de eventos, métricas y monitoreo | `monitoring/` |
+| API de alto nivel | `node.py` (`Node`, `Task`) |
+
+La tarea de IA es una regresión lineal que cada nodo ejecuta sobre datos sintéticos generados con una semilla.
+Documentación: [arquitectura implementada](docs/arquitectura/ARQUITECTURA.md), [pruebas](docs/pruebas/PRUEBAS.md) y [guion de demostración](docs/DEMO.md).
+
+### Uso rápido (sin Docker)
+
+```powershell
+pip install -r requirements.txt
+$env:PYTHONPATH = "src"
+python examples/basic_usage.py      # 3 nodos en localhost y una tarea de ML
+python -m pytest tests -v           # 42 pruebas unitarias y de integración
+```
+
+```python
+from complexnet import Node, Task
+
+node = Node("nodo-01").connect()
+result = node.submit(Task("regresion_lineal", {"n_samples": 10000},
+                          requirements={"cpu": 1, "memory": 256}))
+```
+
+### Red de 3 nodos con Docker
+
+```bash
+docker compose up --build -d          # nodo-01, nodo-02, nodo-03 en 172.30.77.0/24
+python scripts/demo.py todo           # operación normal, carga, fallo e ingreso de nodos
+docker compose down
+```
+
+Panel de cada nodo: <http://localhost:8001>, <http://localhost:8002> y <http://localhost:8003>.
+Los logs JSON de cada nodo quedan en `logs/`.
+
 ## Prueba de concepto - Primer corte
 
 Para el primer corte se implementó una prueba de concepto inicial de comunicación entre dos nodos.
