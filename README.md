@@ -4,6 +4,34 @@ Proyecto integrador de la asignatura **Sistemas Complejos**.
 
 ComplexNet API propone una arquitectura para computación descentralizada sobre redes Ad hoc, en la cual diferentes nodos pueden descubrirse, intercambiar información y mantener una visión local de los participantes activos de la red.
 
+## Fase 3 - API, aplicaciones y validación (tercer corte)
+
+La red real corre en **3 computadores** (un nodo por equipo, misma red local). Guía paso a paso:
+[docs/TRES_PCS.md](docs/TRES_PCS.md).
+
+```powershell
+.\scripts\start_node.ps1 -Id nodo-02        # en cada PC (nodo-01, nodo-02, nodo-03)
+```
+
+| Entregable | Dónde |
+|---|---|
+| API para desarrolladores | `src/complexnet/node.py` · [Manual del desarrollador](docs/api/MANUAL_DESARROLLADOR.md) |
+| Aplicación 1: monitoreo distribuido con alertas | `applications/monitoring_app/` |
+| Aplicación 2: procesamiento distribuido (map-reduce de texto y Monte Carlo) | `applications/distributed_processing/` |
+| Aplicación 3: IA — regresión lineal distribuida por fragmentos | `applications/ai_application/` |
+| Panel de monitoreo del clúster (web, en vivo) | `http://IP-DEL-NODO:8000` |
+| Comparación de 6 estrategias de asignación | `src/complexnet/scheduler/`, [informe](docs/pruebas/INFORME_EXPERIMENTAL.md) |
+| Experimentos (latencia, escalabilidad, fallos, disponibilidad) | `experiments/` · [informe experimental](docs/pruebas/INFORME_EXPERIMENTAL.md) |
+| Pruebas (66) | `tests/` |
+
+```powershell
+# En la PC 1 (con los nodos 02 y 03 ya corriendo en las otras PCs):
+.\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local
+.\.venv\Scripts\python.exe applications\distributed_processing\app.py --id nodo-01 --no-local
+.\.venv\Scripts\python.exe applications\monitoring_app\app.py --id nodo-01
+.\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0
+```
+
 ## Fase 2 - Núcleo funcional (segundo corte)
 
 El núcleo vive en `src/complexnet/` y se ejecuta como una red de nodos autónomos, sin coordinador central:
@@ -28,10 +56,10 @@ Documentación: [arquitectura implementada](docs/arquitectura/ARQUITECTURA.md), 
 ### Uso rápido (sin Docker)
 
 ```powershell
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 $env:PYTHONPATH = "src"
 python examples/basic_usage.py      # 3 nodos en localhost y una tarea de ML
-python -m pytest tests -v           # 42 pruebas unitarias y de integración
+python -m pytest tests -v           # 66 pruebas unitarias y de integración
 ```
 
 ```python

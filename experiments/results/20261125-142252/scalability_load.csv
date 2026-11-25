@@ -1,0 +1,4 @@
+tasks,makespan_sec,throughput_tps,latency_mean_sec,latency_p95_sec,completed,kb_sent_per_sec,kb_received_per_sec,cpu_used_mean_pct
+4,0.371,10.77,0.252,0.371,4,2.55,3.95,"{""nodo-01"": 54.2, ""nodo-03"": 17.9, ""nodo-02"": 33.9}"
+8,0.534,14.99,0.4,0.533,8,3.07,5.49,"{""nodo-01"": 45.8, ""nodo-03"": 35.6, ""nodo-02"": 35.9}"
+16,1.023,15.63,0.662,0.982,16,4.03,5.15,"{""nodo-01"": 44.8, ""nodo-03"": 53.3, ""nodo-02"": 37.9}"

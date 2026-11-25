@@ -20,10 +20,13 @@ class DiscoveryService:
         beacon_interval=2.0,
         broadcast_address=None,
         seed_peers=(),
+        discovery_port=None,
     ):
         self.node = node
         self.beacon_interval = beacon_interval
         self.broadcast_address = broadcast_address
+        # Puerto UDP al que se difunden los beacons (el de escucha de los nodos).
+        self.discovery_port = discovery_port or node.port
         self.seed_peers = list(seed_peers)
         self._thread = None
         self._running = False
@@ -50,18 +53,22 @@ class DiscoveryService:
             self.ping_peers()
             time.sleep(self.beacon_interval)
 
-    def send_beacon(self):
+    def _beacon(self):
         node = self.node
         payload = {"ip_address": node.ip_address, "port": node.port}
         payload.update(node.resources.state())
-        message = Message(
+        return Message(
             type=RESOURCE_BEACON,
             sender_id=node.node_id,
             payload=payload,
             lamport=node.clock.tick(),
         )
+
+    def send_beacon(self):
+        node = self.node
+        message = self._beacon()
         if self.broadcast_address:
-            node.comm.broadcast(message, (self.broadcast_address, node.port))
+            node.comm.broadcast(message, (self.broadcast_address, self.discovery_port))
         for address in self.seed_peers:
             node.comm.send(message, address)
 
@@ -96,7 +103,10 @@ class DiscoveryService:
                 address=f"{peer.ip}:{peer.port}",
                 after_sec=round(elapsed, 2),
             )
-            # Medición inmediata para no esperar al siguiente ciclo.
+            # Respuesta inmediata: el descubrimiento queda bidireccional aunque el
+            # otro nodo no nos tenga como vecino semilla y sin esperar al siguiente
+            # ciclo. Además se mide la latencia de inmediato.
+            node.comm.send(self._beacon(), peer.address)
             self._ping_one(peer)
         elif event == "recovered":
             node.log.event("RECOVERY", peer=peer.node_id, status="ONLINE")

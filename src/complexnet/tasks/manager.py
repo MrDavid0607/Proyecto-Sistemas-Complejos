@@ -30,8 +30,12 @@ class TaskManager:
         queue_timeout=30.0,
         retry_interval=1.0,
         max_attempts=3,
+        slots=2,
     ):
         self.node = node
+        # Capacidad del nodo: número de tareas que ejecuta a la vez; el resto
+        # espera en cola (como en un computador real con CPU limitada).
+        self.slots = threading.Semaphore(max(1, int(slots)))
         self.ack_timeout = ack_timeout
         self.exec_timeout = exec_timeout
         self.queue_timeout = queue_timeout
@@ -57,6 +61,15 @@ class TaskManager:
         self._running = False
         if self._thread is not None:
             self._thread.join(timeout=2)
+
+    def inflight(self, node_id):
+        """Tareas mías todavía sin terminar que están asignadas a `node_id`."""
+        with self._lock:
+            return sum(
+                1
+                for t in self.tasks.values()
+                if not t.is_final and t.assigned_node == node_id
+            )
 
     # ------------------------------------------------- lado del emisor
 
@@ -95,6 +108,9 @@ class TaskManager:
             candidates = node.candidates(
                 allow_local=task.allow_local, exclude=task.excluded
             )
+            allowed = task.requirements.get("nodes")
+            if allowed:
+                candidates = [c for c in candidates if c.node_id in allowed]
             best, scores = node.scheduler.select_node(
                 candidates, task.cpu_required, task.memory_required
             )
@@ -151,11 +167,12 @@ class TaskManager:
     def _run_local(self, task):
         node = self.node
         node.resources.task_started()
-        started = time.perf_counter()
-        node.log.event("TASK_RUNNING", task=task.task_id, on=node.node_id)
         try:
-            data = executors.execute(task.name, task.parameters)
-            elapsed = time.perf_counter() - started
+            with self.slots:
+                started = time.perf_counter()
+                node.log.event("TASK_RUNNING", task=task.task_id, on=node.node_id)
+                data = executors.execute(task.name, task.parameters)
+                elapsed = time.perf_counter() - started
             self._complete(task, node.node_id, data, elapsed)
         except Exception as error:
             node.log.event("TASK_ERROR", task=task.task_id, error=repr(error))
@@ -330,25 +347,29 @@ class TaskManager:
     def _work(self, requester, payload, address):
         node = self.node
         task_id = payload["task_id"]
-        node.resources.task_started()
-        node.log.event("TASK_RUNNING", task=task_id, on=node.node_id,
-                       requested_by=requester)
-        started = time.perf_counter()
+        node.resources.task_started()          # cuenta también las tareas en cola
         try:
-            data = executors.execute(payload["task_name"], payload.get("parameters"))
-            reply = {
-                "task_id": task_id,
-                "status": COMPLETED,
-                "execution_time_sec": round(time.perf_counter() - started, 4),
-                "result_data": data,
-            }
-        except Exception as error:
-            reply = {
-                "task_id": task_id,
-                "status": FAILED,
-                "execution_time_sec": round(time.perf_counter() - started, 4),
-                "error": repr(error),
-            }
+            with self.slots:
+                node.log.event("TASK_RUNNING", task=task_id, on=node.node_id,
+                               requested_by=requester)
+                started = time.perf_counter()
+                try:
+                    data = executors.execute(
+                        payload["task_name"], payload.get("parameters")
+                    )
+                    reply = {
+                        "task_id": task_id,
+                        "status": COMPLETED,
+                        "execution_time_sec": round(time.perf_counter() - started, 4),
+                        "result_data": data,
+                    }
+                except Exception as error:
+                    reply = {
+                        "task_id": task_id,
+                        "status": FAILED,
+                        "execution_time_sec": round(time.perf_counter() - started, 4),
+                        "error": repr(error),
+                    }
         finally:
             node.resources.task_finished()
         if node.running:

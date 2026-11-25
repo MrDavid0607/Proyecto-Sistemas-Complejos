@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-25 14:22:52",
+  "host": "MSI",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.13.7",
+  "cpu_count": 12,
+  "ram_gb": 15.7,
+  "experiment_node": "nodo-01",
+  "nodes": [
+    {
+      "id": "nodo-01",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "nodo-03",
+      "ip": "127.0.0.1",
+      "bandwidth_mbps": 200.0
+    },
+    {
+      "id": "nodo-02",
+      "ip": "127.0.0.1",
+      "bandwidth_mbps": 50.0
+    }
+  ],
+  "strategy_default": "weighted_load",
+  "task_points": 12000000,
+  "quick": true,
+  "environment": "1 PC (3 procesos en localhost), prueba rapida"
+}

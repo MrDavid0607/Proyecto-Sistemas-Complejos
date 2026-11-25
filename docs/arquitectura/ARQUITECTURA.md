@@ -132,7 +132,31 @@ del log, de modo que los logs de varios nodos se pueden ordenar causalmente.
 - **Monitor en terminal** (cada 10 s) y **panel HTTP** por nodo (`/`, `/status`,
   `/events`, `/tasks/<id>`, `POST /tasks`).
 
-## 10. Limitaciones conocidas
+## 10. Ampliaciones de la Fase 3
+
+- **Ranuras de ejecución (`slots`).** Cada nodo ejecuta como máximo `slots` tareas a la vez (2 por
+  defecto); las demás esperan en cola. Modela un computador con CPU limitada y hace que el reparto
+  de carga sea relevante.
+- **Estrategias de asignación intercambiables** (`weighted`, `weighted_load`, `least_loaded`,
+  `lowest_latency`, `round_robin`, `random`). `weighted_load` añade a F(i,j) un término de **carga actual**
+  (tareas en curso en el nodo, incluidas las que yo mismo le envié) con peso 0.30 y una **normalización
+  robusta**: si el rango observado de una métrica es menor que un mínimo significativo (20 puntos de CPU,
+  20 % de memoria o ancho de banda, 5 ms de latencia), se divide por ese mínimo. Así, diferencias de
+  ruido entre nodos desocupados no se amplifican a todo el intervalo [0,1] (problema observado con
+  min-max puro: todas las tareas iban al mismo nodo).
+- **Requisito `nodes`** en una tarea: restringe los candidatos a una lista de nodos.
+- **Descubrimiento bidireccional inmediato:** al descubrir un nodo nuevo se le responde con un beacon
+  unicast, por lo que funciona también cuando solo uno de los dos conoce al otro como vecino semilla.
+- **Detección automática de la subred** (`--broadcast auto`) y vecinos semilla por IP (`--peers`).
+- **Alertas distribuidas** (mensaje `ALERT`) y registro de alertas por nodo.
+- **Panel web del clúster** (`monitoring/dashboard.html`) con CPU, RAM, latencia en el tiempo, tareas,
+  alertas y eventos; API HTTP con endpoints de administración para los experimentos.
+- **Medición de CPU en un hilo aparte** con ventana fija (las lecturas concurrentes de `psutil` se pisaban).
+- **Nuevas tareas:** `normal_equations` y `evaluate_model` (IA distribuida), `monte_carlo_pi` y
+  `word_count` (procesamiento distribuido).
+- **Simulación de fallo remoto** (`/admin/fail`): el nodo deja de enviar y recibir durante N segundos.
+
+## 11. Limitaciones conocidas
 
 - Las tareas viajan por UDP sin retransmisión: la pérdida de un datagrama se maneja con
   el timeout de `ACK` y la reasignación, no con reenvío. Los mensajes son pequeños.

@@ -1,5 +1,6 @@
 from .interface import ICommunicationLayer
 from .messages import (
+    ALERT,
     PING,
     PONG,
     RESOURCE_BEACON,
@@ -26,4 +27,5 @@ __all__ = [
     "TASK_RESULT",
     "PING",
     "PONG",
+    "ALERT",
 ]

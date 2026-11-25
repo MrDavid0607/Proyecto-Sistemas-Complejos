@@ -1,8 +1,27 @@
-# Pruebas — Fase 2
+# Pruebas
 
 ```bash
-python -m pytest tests -v        # 42 pruebas, ~25 s
+python -m pytest tests -v        # 66 pruebas, ~45 s
 ```
+
+La evaluación experimental de la Fase 3 (latencia, escalabilidad, estrategias, fallos, disponibilidad)
+está en [INFORME_EXPERIMENTAL.md](INFORME_EXPERIMENTAL.md).
+
+## Pruebas de la Fase 3 (`tests/test_phase3.py`, 24 pruebas)
+
+| Área | Qué se verifica |
+|---|---|
+| Estrategias | Las 6 existen y respetan el filtro de recursos; round-robin cíclico; least-loaded; lowest-latency; estrategia inválida |
+| Normalización robusta | No amplifica diferencias mínimas; `weighted_load` prefiere al nodo menos cargado; `weighted` (diseño) ignora la carga; el ejemplo numérico del diseño no cambia |
+| IA distribuida | La suma de los estadísticos de los fragmentos equivale a la regresión sobre todos los datos; evaluación con R² alto |
+| Procesamiento | Monte Carlo reproducible y cercano a π; conteo de palabras |
+| API | `map` conserva el orden; reparto entre varios nodos; requisito `nodes`; cambio de estrategia en caliente; `on_event` |
+| Alertas | Una alerta llega al registro de todos los nodos |
+| Fallos | Un nodo con fallo simulado pasa a `OFFLINE` y se recupera; una tarea enviada a un nodo caído se reasigna |
+| Capacidad | Las ranuras limitan la ejecución simultánea (cola) |
+| Red | Detección de la dirección de broadcast de la subred |
+
+## Pruebas de la Fase 2
 
 ## Unitarias (`tests/test_scheduler.py`, `tests/test_components.py`)
 

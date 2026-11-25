@@ -8,20 +8,24 @@ responder directamente a la dirección de origen.
 import collections
 import socket
 import threading
+import time
 
 from .interface import ICommunicationLayer
 from .messages import InvalidMessage, deserialize, serialize
 
 MAX_DATAGRAM = 65535
+MAX_PAYLOAD = 60000
 SEEN_CACHE_SIZE = 2048
 
 
 class UDPCommunication(ICommunicationLayer):
 
-    def __init__(self, port, on_error=None, on_send=None):
+    def __init__(self, port, on_error=None, on_send=None, on_receive=None):
         self.port = port
         self.on_error = on_error or (lambda text: None)
-        self.on_send = on_send
+        self.on_send = on_send          # on_send(message, size_bytes)
+        self.on_receive = on_receive    # on_receive(size_bytes)
+        self.mute_until = 0.0           # simulación de fallo: no envía ni recibe
         self._handler = None
         self._running = False
         self._thread = None
@@ -36,6 +40,10 @@ class UDPCommunication(ICommunicationLayer):
         if hasattr(socket, "SIO_UDP_CONNRESET"):
             # Windows: evita que un ICMP "puerto inalcanzable" rompa recvfrom.
             self._sock.ioctl(socket.SIO_UDP_CONNRESET, False)
+
+    @property
+    def muted(self):
+        return time.time() < self.mute_until
 
     # ------------------------------------------------------------------
 
@@ -65,16 +73,23 @@ class UDPCommunication(ICommunicationLayer):
     # ------------------------------------------------------------------
 
     def _send(self, message, address):
-        if not self._running:
+        if not self._running or self.muted:
+            return
+        data = serialize(message)
+        if len(data) > MAX_PAYLOAD:
+            self.on_error(
+                f"mensaje {message.type} de {len(data)} bytes excede el máximo UDP "
+                f"({MAX_PAYLOAD}); se descarta"
+            )
             return
         try:
-            self._sock.sendto(serialize(message), address)
+            self._sock.sendto(data, address)
         except OSError as error:
             if self._running:
                 self.on_error(f"no se pudo enviar a {address}: {error}")
             return
         if self.on_send is not None:
-            self.on_send(message, address)
+            self.on_send(message, len(data))
 
     def _is_duplicate(self, message_id):
         with self._seen_lock:
@@ -95,6 +110,10 @@ class UDPCommunication(ICommunicationLayer):
                 if self._running:
                     continue
                 return
+            if self.muted:
+                continue  # el nodo "caído" no recibe nada
+            if self.on_receive is not None:
+                self.on_receive(len(data))
             try:
                 message = deserialize(data)
             except InvalidMessage as error:

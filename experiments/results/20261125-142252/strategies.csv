@@ -1,0 +1,7 @@
+strategy,tasks,makespan_sec,makespan_std,latency_mean_sec,latency_p95_sec,imbalance_cv,tasks_per_node
+weighted,18,1.804,0.0,1.01,1.797,1.414,"{""nodo-01"": 0.0, ""nodo-02"": 18.0, ""nodo-03"": 0.0}"
+weighted_load,18,1.361,0.0,0.654,1.206,0.758,"{""nodo-01"": 11.0, ""nodo-02"": 0.0, ""nodo-03"": 7.0}"
+least_loaded,18,1.267,0.0,0.663,1.141,0.0,"{""nodo-01"": 6.0, ""nodo-02"": 6.0, ""nodo-03"": 6.0}"
+lowest_latency,18,1.563,0.0,0.876,1.492,1.414,"{""nodo-01"": 18.0, ""nodo-02"": 0.0, ""nodo-03"": 0.0}"
+round_robin,18,1.192,0.0,0.667,1.11,0.0,"{""nodo-01"": 6.0, ""nodo-02"": 6.0, ""nodo-03"": 6.0}"
+random,18,1.145,0.0,0.639,1.021,0.36,"{""nodo-01"": 9.0, ""nodo-02"": 4.0, ""nodo-03"": 5.0}"

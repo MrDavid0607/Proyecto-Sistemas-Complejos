@@ -20,12 +20,17 @@ class EventLogger:
         self.keep = keep
         self._events = []
         self._lock = threading.Lock()
+        self._subscribers = []
         self._file = None
         if log_dir:
             os.makedirs(log_dir, exist_ok=True)
             self._file = open(
                 os.path.join(log_dir, f"{node_id}.jsonl"), "a", encoding="utf-8"
             )
+
+    def subscribe(self, callback):
+        """callback(record) se invoca por cada evento registrado."""
+        self._subscribers.append(callback)
 
     def event(self, kind, **fields):
         record = {
@@ -49,6 +54,11 @@ class EventLogger:
                 f"{self.node_id} {kind} {details}".rstrip(),
                 flush=True,
             )
+        for callback in list(self._subscribers):
+            try:
+                callback(record)
+            except Exception:
+                pass  # un suscriptor defectuoso no debe afectar al nodo
         return record
 
     def recent(self, count=50):
@@ -77,6 +87,9 @@ class Metrics:
             "failures_detected": 0,
             "messages_sent": 0,
             "bytes_sent": 0,
+            "messages_received": 0,
+            "bytes_received": 0,
+            "alerts_raised": 0,
         }
         self.discovery_times = []
         self.assignment_times = []

@@ -58,9 +58,100 @@ def echo(parameters):
     return {"echo": parameters}
 
 
+# ---------------------------------------------------------------------------
+# Aplicación de IA: regresión lineal multivariable distribuida por fragmentos
+# ---------------------------------------------------------------------------
+
+def _model_weights(n_features, model_seed):
+    """Pesos verdaderos [w1..wd, b] compartidos por todos los fragmentos."""
+    rng = np.random.default_rng(model_seed)
+    return rng.uniform(-3.0, 3.0, n_features + 1)
+
+
+def _shard_data(parameters):
+    n_samples = int(parameters.get("n_samples", 5000))
+    n_features = int(parameters.get("n_features", 3))
+    noise = float(parameters.get("noise", 0.5))
+    weights = _model_weights(n_features, int(parameters.get("model_seed", 1234)))
+    shard = int(parameters.get("shard", 0))
+    rng = np.random.default_rng(int(parameters.get("data_seed", 99)) + shard)
+    x = rng.normal(0.0, 2.0, (n_samples, n_features))
+    y = x @ weights[:-1] + weights[-1] + rng.normal(0.0, noise, n_samples)
+    return x, y, weights
+
+
+def normal_equations(parameters):
+    """Estadísticos suficientes de un fragmento: XtX, Xty, n, Σy, Σy².
+
+    La regresión por mínimos cuadrados se puede resolver exactamente sumando
+    estos estadísticos de todos los fragmentos (cada nodo trabaja sobre su
+    porción de los datos y solo viaja una matriz pequeña por la red).
+    """
+    x, y, _ = _shard_data(parameters)
+    design = np.hstack([x, np.ones((x.shape[0], 1))])
+    return {
+        "xtx": (design.T @ design).tolist(),
+        "xty": (design.T @ y).tolist(),
+        "n": int(x.shape[0]),
+        "sum_y": float(y.sum()),
+        "sum_yy": float((y * y).sum()),
+    }
+
+
+def evaluate_model(parameters):
+    """Evalúa pesos [w1..wd, b] sobre un fragmento de datos nuevo."""
+    x, y, _ = _shard_data(parameters)
+    w = np.asarray(parameters["weights"], dtype=float)
+    predictions = x @ w[:-1] + w[-1]
+    sse = float(np.sum((y - predictions) ** 2))
+    sst = float(np.sum((y - y.mean()) ** 2))
+    return {
+        "n": int(len(y)),
+        "sse": sse,
+        "sst": sst,
+        "mse": sse / len(y),
+        "r2": 1.0 - sse / sst if sst else 0.0,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Aplicación de procesamiento: cálculo colaborativo y análisis de texto
+# ---------------------------------------------------------------------------
+
+def monte_carlo_pi(parameters):
+    """Cuenta puntos dentro del círculo unidad (estimación de pi)."""
+    n_points = int(parameters.get("n_points", 2_000_000))
+    rng = np.random.default_rng(int(parameters.get("seed", 0)))
+    inside = 0
+    remaining = n_points
+    while remaining > 0:
+        batch = min(remaining, 1_000_000)
+        x = rng.random(batch)
+        y = rng.random(batch)
+        inside += int(np.count_nonzero(x * x + y * y <= 1.0))
+        remaining -= batch
+    return {"inside": inside, "total": n_points}
+
+
+def word_count(parameters):
+    """Frecuencia de palabras (≥ 4 letras) de un fragmento de texto."""
+    import re
+    from collections import Counter
+
+    text = str(parameters.get("text", "")).lower()
+    words = re.findall(r"[a-záéíóúñü]{4,}", text)
+    counts = Counter(words)
+    top = int(parameters.get("top", 400))
+    return {"counts": dict(counts.most_common(top)), "words": len(words)}
+
+
 EXECUTORS = {
     "regresion_lineal": linear_regression,
     "linear_regression": linear_regression,
+    "normal_equations": normal_equations,
+    "evaluate_model": evaluate_model,
+    "monte_carlo_pi": monte_carlo_pi,
+    "word_count": word_count,
     "echo": echo,
 }
 
