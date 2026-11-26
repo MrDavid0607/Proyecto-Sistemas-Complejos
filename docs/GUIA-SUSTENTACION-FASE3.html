@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de sustentación — Fase 3</title>
+<style>
+  :root {
+    --bg: #f4f6fa; --card: #ffffff; --ink: #172033; --muted: #5b667a; --line: #dfe4ee;
+    --accent: #2563eb; --accent-ink: #ffffff; --ok: #16794c; --warn: #b45309; --bad: #b42318;
+    --code-bg: #0f172a; --code-ink: #e2e8f0; --chip: #e8eefc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1020; --card: #131a2e; --ink: #e6ebf5; --muted: #9aa6bd; --line: #25304a;
+      --accent: #5b8cff; --accent-ink: #0b1020; --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+      --code-bg: #070b16; --code-ink: #dbe4f5; --chip: #1c2745;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1020; --card: #131a2e; --ink: #e6ebf5; --muted: #9aa6bd; --line: #25304a;
+    --accent: #5b8cff; --accent-ink: #0b1020; --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+    --code-bg: #070b16; --code-ink: #dbe4f5; --chip: #1c2745;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 74px; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header.top { background: linear-gradient(135deg, #1d4ed8, #7c3aed); color: #fff; padding: 28px 16px 22px; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+  header.top .wrap { padding: 0; }
+  h1 { margin: 0 0 6px; font-size: clamp(1.5rem, 4vw, 2.1rem); line-height: 1.15; }
+  header.top p { margin: 0; opacity: .92; }
+  .pathrow { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pathrow code { background: rgba(255,255,255,.16); padding: 4px 10px; border-radius: 8px; font-size: .85rem; word-break: break-all; }
+  nav.tabs { position: sticky; top: 0; z-index: 10; background: var(--card); border-bottom: 1px solid var(--line); }
+  nav.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; padding: 8px 16px; scrollbar-width: thin; }
+  nav.tabs a { white-space: nowrap; text-decoration: none; color: var(--muted); font-size: .9rem; padding: 6px 12px; border-radius: 999px; font-weight: 600; }
+  nav.tabs a:hover, nav.tabs a.on { background: var(--chip); color: var(--accent); }
+  main { padding: 20px 0 60px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin: 0 0 18px; }
+  section > h2 { margin: 0 0 4px; font-size: 1.3rem; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .num { display: inline-grid; place-items: center; min-width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: .95rem; padding: 0 6px; }
+  .sub { margin: 0 0 14px; color: var(--muted); }
+  h3 { margin: 22px 0 6px; font-size: 1.05rem; }
+  p { margin: 8px 0; }
+  .say, .see, .warnbox { border-left: 4px solid; border-radius: 8px; padding: 10px 14px; margin: 10px 0; font-size: .95rem; }
+  .say  { border-color: var(--accent); background: var(--chip); }
+  .see  { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 11%, transparent); }
+  .warnbox { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+  .say b:first-child, .see b:first-child, .warnbox b:first-child { text-transform: uppercase; letter-spacing: .04em; font-size: .75rem; display: block; margin-bottom: 2px; color: var(--muted); }
+  .code { position: relative; margin: 10px 0; }
+  .code pre { margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 14px 92px 14px 14px;
+              overflow-x: auto; font: 13.5px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; white-space: pre; }
+  .code button { position: absolute; top: 8px; right: 8px; border: 0; border-radius: 8px; padding: 6px 12px; cursor: pointer;
+                 background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: .8rem; }
+  .code button.done { background: var(--ok); color: #fff; }
+  .code .lbl { display: block; font-size: .78rem; color: var(--muted); margin: 10px 0 -4px; font-weight: 600; }
+  ul.check { list-style: none; padding: 0; margin: 8px 0; }
+  ul.check li { padding: 7px 0; border-bottom: 1px dashed var(--line); }
+  ul.check label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  ul.check input { margin-top: 5px; width: 18px; height: 18px; accent-color: var(--accent); }
+  ul.check input:checked + span { color: var(--muted); text-decoration: line-through; }
+  .ips { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin: 10px 0; }
+  .ips label { font-size: .85rem; color: var(--muted); font-weight: 600; display: block; }
+  .ips input { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: 15px ui-monospace, Consolas, monospace; }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+  .tw { overflow-x: auto; }
+  th, td { border-bottom: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+  details { border: 1px solid var(--line); border-radius: 10px; margin: 8px 0; background: var(--bg); }
+  details summary { cursor: pointer; padding: 11px 14px; font-weight: 700; }
+  details div { padding: 0 14px 12px; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .tl { list-style: none; padding: 0; margin: 8px 0; counter-reset: t; }
+  .tl li { counter-increment: t; display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+  .tl li::before { content: counter(t); flex: 0 0 28px; height: 28px; border-radius: 50%; background: var(--chip); color: var(--accent); display: grid; place-items: center; font-weight: 800; }
+  .tl small { color: var(--muted); display: block; }
+  .themebtn { background: rgba(255,255,255,.2); color: #fff; border: 0; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-weight: 700; }
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 10px 0 40px; }
+  kbd { background: var(--chip); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; font-size: .85em; }
+  code.i { background: var(--chip); border-radius: 5px; padding: 1px 6px; font-size: .88em; }
+  @media (max-width: 560px) { section { padding: 16px 14px; } .code pre { padding-right: 14px; padding-top: 44px; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Guía de sustentación · Fase 3</h1>
+    <p>ComplexNet API — 3 computadores físicos, sin servidor central</p>
+    <div class="pathrow">
+      <code id="repoPath">C:\Users\david\Desktop\sistemascomplejos\repo-github</code>
+      <button class="themebtn" id="themeBtn" type="button">Cambiar tema</button>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs"><div class="wrap">
+  <a href="#antes">Antes</a><a href="#red">Red</a><a href="#paso1">Paso 1</a><a href="#paso2">Paso 2</a>
+  <a href="#fallo">Demo fallo</a><a href="#paso3">Paso 3</a><a href="#extras">Extras</a>
+  <a href="#orden">Orden</a><a href="#preguntas">Preguntas</a><a href="#problemas">Problemas</a>
+</div></nav>
+
+<main class="wrap">
+
+<!-- ANTES -->
+<section id="antes">
+  <h2><span class="num">0</span> Antes de llegar</h2>
+  <p class="sub">Marca cada punto. Las casillas se guardan en este navegador.</p>
+  <ul class="check">
+    <li><label><input type="checkbox"><span>Mis 2 compañeros clonaron el repo y probaron su <code class="i">.bat</code> (me mandaron captura)</span></label></li>
+    <li><label><input type="checkbox"><span>Probé <code class="i">iniciar_nodo-01.bat</code> una vez (así queda creada la regla del firewall)</span></label></li>
+    <li><label><input type="checkbox"><span>Celular cargado, con el <b>internet compartido</b> (hotspot) listo como plan B</span></label></li>
+    <li><label><input type="checkbox"><span>PDF del informe abierto: <code class="i">proyecto corte 3\proyecto_sistemas_complejos.pdf</code></span></label></li>
+    <li><label><input type="checkbox"><span>Cargadores de los 3 portátiles</span></label></li>
+  </ul>
+</section>
+
+<!-- RED -->
+<section id="red">
+  <h2><span class="num">1</span> Armar la red <small style="color:var(--muted);font-weight:500">· 5 min</small></h2>
+  <p class="sub">Los 3 PCs al <b>mismo Wi-Fi</b>. No importa si tiene internet; solo que estén en la misma red.</p>
+  <ul class="check">
+    <li><label><input type="checkbox"><span>Los 3 al mismo Wi-Fi (universidad). Si no se ven, usar el hotspot del celular</span></label></li>
+    <li><label><input type="checkbox"><span>Si Windows pregunta el tipo de red: elegir <b>Privada</b></span></label></li>
+    <li><label><input type="checkbox"><span>Cada compañero ejecuta <code class="i">git pull</code> en su carpeta del proyecto</span></label></li>
+    <li><label><input type="checkbox"><span>Compañero 1: doble clic en <code class="i">iniciar_nodo-02.bat</code> · Compañero 2: <code class="i">iniciar_nodo-03.bat</code>. Ventana abierta, sin cerrar</span></label></li>
+  </ul>
+  <div class="see"><b>Debe verse en su ventana</b>Nodo: nodo-0X | IP detectada: … | Panel: http://localhost:8000 y luego NODE_STARTED.</div>
+  <div class="code"><span class="lbl">Cada compañero, si ya había clonado antes:</span><pre>git pull</pre><button type="button">Copiar</button></div>
+
+  <h3>IPs de los compañeros (las muestra su ventana al arrancar)</h3>
+  <div class="ips">
+    <div><label for="ip2">IP de nodo-02</label><input id="ip2" placeholder="ej. 192.168.1.5" inputmode="decimal" autocomplete="off"></div>
+    <div><label for="ip3">IP de nodo-03</label><input id="ip3" placeholder="ej. 192.168.1.7" inputmode="decimal" autocomplete="off"></div>
+  </div>
+  <p class="sub">Si las escribes aquí, los comandos de “pasar IPs a mano” de más abajo se rellenan solos.</p>
+</section>
+
+<!-- PASO 1 -->
+<section id="paso1">
+  <h2><span class="num">2</span> Paso 1 · Comprobar que se ven los 3 PCs</h2>
+  <p class="sub">En mi PC: abrir PowerShell y entrar a la carpeta del repo.</p>
+  <div class="code"><pre>cd C:\Users\david\Desktop\sistemascomplejos\repo-github</pre><button type="button">Copiar</button></div>
+  <div class="code"><span class="lbl">Arrancar mi nodo:</span><pre>.\iniciar_nodo-01.bat</pre><button type="button">Copiar</button></div>
+  <p>Abrir en el navegador: <b>http://localhost:8000</b></p>
+  <div class="see"><b>Debe verse</b>nodo-01, nodo-02 y nodo-03 en ONLINE, con CPU, RAM y latencia. En la consola, líneas DISCOVERY.</div>
+  <div class="say"><b>Qué decir</b>Cada PC es un nodo. Se descubren solos por UDP broadcast cada 2 segundos. No hay servidor central.</div>
+  <div class="warnbox"><b>Importante</b>Cerrar con <kbd>Ctrl</kbd>+<kbd>C</kbd> antes de seguir: las aplicaciones usan el mismo puerto y no pueden correr a la vez que este nodo.</div>
+
+  <h3>Si NO se ven</h3>
+  <ul class="check">
+    <li><label><input type="checkbox"><span>Cambiar al hotspot del celular (los 3 PCs ahí) y repetir</span></label></li>
+    <li><label><input type="checkbox"><span>Confirmar que la red es <b>Privada</b></span></label></li>
+  </ul>
+  <div class="code"><span class="lbl">Pasar las IPs a mano (usa las IPs escritas arriba):</span><pre data-tpl="powershell -ExecutionPolicy Bypass -File .\scripts\start_node.ps1 -Id nodo-01 -Peers {PEERS}">powershell -ExecutionPolicy Bypass -File .\scripts\start_node.ps1 -Id nodo-01 -Peers IP-NODO-02,IP-NODO-03</pre><button type="button">Copiar</button></div>
+  <div class="code"><span class="lbl">Probar conectividad con un compañero:</span><pre data-tpl="ping {IP2}">ping IP-NODO-02</pre><button type="button">Copiar</button></div>
+  <div class="warnbox"><b>Ojo</b>Si paso las IPs aquí, también debo agregar <code class="i">--peers IP2,IP3</code> al final de cada aplicación del Paso 2.</div>
+</section>
+
+<!-- PASO 2 -->
+<section id="paso2">
+  <h2><span class="num">3</span> Paso 2 · Las 3 aplicaciones</h2>
+  <p class="sub">Una por una, <b>no a la vez</b>. Cada aplicación arranca su propio nodo-01 y espera a los otros dos.</p>
+
+  <h3>Aplicación 1 · Monitoreo con alertas</h3>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\monitoring_app\app.py --id nodo-01{PEERSARG}">.\.venv\Scripts\python.exe applications\monitoring_app\app.py --id nodo-01</pre><button type="button">Copiar</button></div>
+  <p>Dejarla corriendo y abrir <b>http://localhost:8000</b> (panel en vivo).</p>
+  <div class="see"><b>Demo</b>Pedir a un compañero que cierre su ventana con Ctrl+C. A los ~5 s sale una <b>alerta CRÍTICA</b>: “nodo-0X está OFFLINE”. Que lo vuelva a abrir: alerta INFO “volvió a estar ONLINE”.</div>
+  <div class="say"><b>Qué decir</b>El monitoreo no depende de un servidor: cada nodo detecta el silencio (más de 5 s) y la alerta se difunde a todos los nodos. Cerrar con Ctrl+C.</div>
+
+  <h3>Aplicación 2 · Procesamiento distribuido (map-reduce y π)</h3>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\distributed_processing\app.py --id nodo-01 --no-local{PEERSARG}">.\.venv\Scripts\python.exe applications\distributed_processing\app.py --id nodo-01 --no-local</pre><button type="button">Copiar</button></div>
+  <div class="see"><b>Debe verse</b>Conteo de palabras de los archivos del proyecto, partido en fragmentos que ejecutan los otros dos PCs; luego estimación de π por Monte Carlo, con tiempos y fragmentos por nodo.</div>
+  <div class="say"><b>Qué decir</b>Map: cada PC cuenta las palabras de su fragmento. Reduce: mi nodo suma los conteos. <code class="i">--no-local</code> hace que todo el trabajo lo hagan los otros dos computadores.</div>
+
+  <h3>Aplicación 3 · Inteligencia artificial (regresión distribuida)</h3>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local{PEERSARG}">.\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local</pre><button type="button">Copiar</button></div>
+  <div class="see"><b>Debe verse</b>Entrenamiento con 12 fragmentos repartidos en la red; al final, pesos aprendidos frente a los reales, R² y fragmentos por nodo.</div>
+  <div class="say"><b>Qué decir</b>Cada PC calcula XᵀX y Xᵀy de su fragmento; yo los sumo y resuelvo. Es idéntico a entrenar con todos los datos en un equipo, pero por la red solo viajan números pequeños, no los datos.</div>
+</section>
+
+<!-- FALLO -->
+<section id="fallo">
+  <h2><span class="num">★</span> Demo de tolerancia a fallos <small style="color:var(--muted);font-weight:500">· la mejor para mostrar</small></h2>
+  <p class="sub">Alargo cada fragmento para tener tiempo de tumbar un nodo.</p>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local --simulate-seconds 6{PEERSARG}">.\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local --simulate-seconds 6</pre><button type="button">Copiar</button></div>
+  <ol>
+    <li>Mientras corre, un compañero cierra su nodo con Ctrl+C.</li>
+    <li>Se ve la <b>reasignación</b> del fragmento al otro nodo.</li>
+    <li>El resultado final queda <b>igual</b>.</li>
+  </ol>
+  <div class="say"><b>Qué decir</b>El nodo caído se detecta en 5 s o menos y sus tareas se reasignan solas. No se pierde trabajo mientras haya un nodo vivo.</div>
+</section>
+
+<!-- PASO 3 -->
+<section id="paso3">
+  <h2><span class="num">4</span> Paso 3 · Experimentos e informe</h2>
+  <div class="warnbox"><b>Antes de empezar</b>Hacerlo antes de sustentar si hay tiempo. No debe haber ningún nodo ni aplicación corriendo en mi PC.</div>
+  <div class="code"><span class="lbl">Versión completa (≈10–12 min):</span><pre data-tpl=".\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0{PEERSARG}">.\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0</pre><button type="button">Copiar</button></div>
+  <div class="code"><span class="lbl">Versión corta (≈3 min):</span><pre data-tpl=".\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0 --quick{PEERSARG}">.\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0 --quick</pre><button type="button">Copiar</button></div>
+  <div class="code"><span class="lbl">Generar el informe con esos datos:</span><pre>.\.venv\Scripts\python.exe experiments\report.py</pre><button type="button">Copiar</button></div>
+  <p>Quedan actualizados <code class="i">docs\pruebas\INFORME_EXPERIMENTAL.md</code> y <code class="i">docs\informe\fase3_para_pegar.tex</code>. Luego aviso a Claude: regenera el bloque del informe, lo pego en Overleaf, recompilo y subo el PDF.</p>
+  <p><b>Qué miden:</b> latencia, tiempo de descubrimiento, escalabilidad (1/2/3 nodos), comparación de las 6 estrategias, tolerancia a fallos y disponibilidad.</p>
+</section>
+
+<!-- EXTRAS -->
+<section id="extras">
+  <h2><span class="num">+</span> Comandos útiles durante la demo</h2>
+  <div class="code"><span class="lbl">Cambiar la estrategia de asignación en caliente (en el nodo que corre una app):</span><pre>Invoke-RestMethod -Method Post -Uri http://localhost:8000/admin/strategy -Body '{"strategy":"round_robin"}'</pre><button type="button">Copiar</button></div>
+  <p class="sub">Estrategias: weighted · weighted_load · least_loaded · lowest_latency · round_robin · random</p>
+  <div class="code"><span class="lbl">Simular una caída de 20 s en el nodo de un compañero:</span><pre data-tpl="Invoke-RestMethod -Method Post -Uri http://{IP2}:8000/admin/fail -Body '{&quot;seconds&quot;:20}'">Invoke-RestMethod -Method Post -Uri http://IP-NODO-02:8000/admin/fail -Body '{"seconds":20}'</pre><button type="button">Copiar</button></div>
+  <div class="code"><span class="lbl">Ver el estado de un nodo:</span><pre>Invoke-RestMethod http://localhost:8000/status</pre><button type="button">Copiar</button></div>
+  <div class="code"><span class="lbl">Correr las 66 pruebas automáticas (≈45 s; sin nodos corriendo):</span><pre>$env:PYTHONPATH="src"; .\.venv\Scripts\python.exe -m pytest tests -q</pre><button type="button">Copiar</button></div>
+</section>
+
+<!-- ORDEN -->
+<section id="orden">
+  <h2><span class="num">⏱</span> Orden de la sustentación <small style="color:var(--muted);font-weight:500">· ≈ 10 min</small></h2>
+  <ol class="tl">
+    <li><div><b>Qué es</b> · 1 min<small>Red descentralizada de cómputo sobre redes ad hoc; sin servidor central; 3 PCs reales.</small></div></li>
+    <li><div><b>Cómo se conectan</b> · 1 min<small>Misma red local, UDP/JSON, beacon cada 2 s, tabla de vecinos, timeout de 5 s.</small></div></li>
+    <li><div><b>Panel con los 3 nodos</b> · 1 min<small>Paso 1.</small></div></li>
+    <li><div><b>App 1 de monitoreo + caída de un nodo</b> · 2 min</div></li>
+    <li><div><b>App 3 de IA distribuida + reasignación</b> · 2 min</div></li>
+    <li><div><b>App 2 de procesamiento</b> · 1 min</div></li>
+    <li><div><b>Experimentos e informe</b> · 1 min<small>Mostrar tablas y gráficas: latencia, escalabilidad, estrategias, fallos.</small></div></li>
+    <li><div><b>Qué cambió de la Fase 2 a la Fase 3</b> · 1 min<small>Tabla de abajo.</small></div></li>
+  </ol>
+
+  <h3>Fase 2 → Fase 3</h3>
+  <div class="tw"><table>
+    <tr><th></th><th>Fase 2</th><th>Fase 3</th></tr>
+    <tr><td><b>Dónde corre</b></td><td>3 contenedores Docker en 1 PC</td><td>3 PCs físicos en red real</td></tr>
+    <tr><td><b>Descubrimiento</b></td><td>Broadcast a subred fija de Docker</td><td>Detección automática de subred y vecinos por IP</td></tr>
+    <tr><td><b>Uso</b></td><td>Script de demo</td><td>API para desarrolladores y manual</td></tr>
+    <tr><td><b>Aplicaciones</b></td><td>1 tarea de ejemplo</td><td>3 aplicaciones descentralizadas</td></tr>
+    <tr><td><b>Monitoreo</b></td><td>Terminal y JSON</td><td>Panel web en vivo con alertas</td></tr>
+    <tr><td><b>Planificación</b></td><td>1 función F(i,j)</td><td>6 estrategias intercambiables</td></tr>
+    <tr><td><b>Capacidad</b></td><td>Sin límite</td><td>slots (2 tareas a la vez, resto en cola)</td></tr>
+    <tr><td><b>Validación</b></td><td>42 pruebas</td><td>66 pruebas y experimentos</td></tr>
+  </table></div>
+</section>
+
+<!-- PREGUNTAS -->
+<section id="preguntas">
+  <h2><span class="num">?</span> Preguntas probables del profe</h2>
+  <details><summary>¿Cómo se conectan los 3 computadores?</summary><div>Misma red local (Wi-Fi o hotspot), mensajes JSON por UDP, puerto 9999. Cada nodo manda un RESOURCE_BEACON por broadcast cada 2 s; al recibir uno de un nodo nuevo lo registra y le contesta. Si el broadcast está bloqueado, se pasan las IPs a mano.</div></details>
+  <details><summary>¿Cómo detectan un fallo?</summary><div>Si pasan más de 5 s sin recibir mensajes de un vecino, se marca OFFLINE. Sus tareas se reasignan a otro nodo (máximo 3 intentos).</div></details>
+  <details><summary>¿Quién decide a qué nodo va una tarea?</summary><div>El planificador de cada nodo, con información local. La estrategia por defecto es weighted_load.</div></details>
+  <details><summary>¿Qué mejoraron del modelo original?</summary><div>Con la función F(i,j) del diseño y la normalización min-max, diferencias mínimas entre nodos casi iguales se amplificaban y todas las tareas iban al mismo nodo. Se agregó un término de carga (peso 0.30) y una normalización robusta (rango mínimo significativo). El informe compara las 6 estrategias.</div></details>
+  <details><summary>¿Dónde está la IA?</summary><div>Regresión lineal múltiple distribuida: cada nodo calcula XᵀX y Xᵀy de su fragmento; se suman y se resuelve. El resultado es idéntico al de un solo equipo.</div></details>
+  <details><summary>¿Qué pasa si se cae el nodo que envía la tarea?</summary><div>Pierde el estado de sus tareas (no hay persistencia). Está en las limitaciones.</div></details>
+  <details><summary>¿UDP garantiza la entrega?</summary><div>No. Se compensa con ACK, timeout y reasignación de la tarea.</div></details>
+  <details><summary>¿El ancho de banda es real?</summary><div>Es un valor declarado por el nodo, no medido. También está en las limitaciones.</div></details>
+  <details><summary>¿Cómo agrega otro desarrollador una aplicación?</summary><div>Con la clase Node: connect(), submit(), map(), broadcast(), raise_alert(). Está en docs/api/MANUAL_DESARROLLADOR.md.</div></details>
+</section>
+
+<!-- PROBLEMAS -->
+<section id="problemas">
+  <h2><span class="num">!</span> Problemas comunes</h2>
+  <div class="tw"><table>
+    <tr><th>Síntoma</th><th>Solución</th></tr>
+    <tr><td>No aparecen los otros nodos</td><td>Hotspot del celular; red Privada; pasar -Peers IP2,IP3; ping a la IP del otro</td></tr>
+    <tr><td><code class="i">.venv … no se reconoce</code> en un PC</td><td>Falta crear el entorno. <code class="i">python --version</code>; si falla, reinstalar Python marcando “Add to PATH”; luego <code class="i">python -m venv .venv</code> y doble clic al .bat</td></tr>
+    <tr><td>Puerto ocupado (Address already in use)</td><td>Ya hay un nodo o una app corriendo en ese PC: cerrar con Ctrl+C o cerrar la ventana</td></tr>
+    <tr><td>Windows pide permiso de administrador</td><td>Aceptar (abre el firewall UDP 9999 y TCP 8000, solo la primera vez)</td></tr>
+    <tr><td>La app se queda esperando vecinos</td><td>Faltan nodos arriba: revisar que los 2 compañeros tengan su ventana abierta</td></tr>
+    <tr><td>Un compañero cerró su ventana sin querer</td><td>Doble clic otra vez a su .bat: el nodo se reincorpora solo</td></tr>
+  </table></div>
+
+  <h3>Dónde está todo</h3>
+  <ul>
+    <li>Repositorio: <b>github.com/MrDavid0607/Proyecto-Sistemas-Complejos</b></li>
+    <li>Informe completo (Fases 1–3): <code class="i">proyecto corte 3/proyecto_sistemas_complejos.pdf</code></li>
+    <li>Manual del desarrollador: <code class="i">docs/api/MANUAL_DESARROLLADOR.md</code></li>
+    <li>Guía de los 3 PCs: <code class="i">docs/TRES_PCS.md</code></li>
+    <li>Informe experimental: <code class="i">docs/pruebas/INFORME_EXPERIMENTAL.md</code></li>
+    <li>Código: <code class="i">src/complexnet/</code> (núcleo), <code class="i">applications/</code> (3 apps), <code class="i">experiments/</code>, <code class="i">tests/</code></li>
+  </ul>
+</section>
+
+</main>
+<footer>Guía local · funciona sin internet</footer>
+
+<script>
+(function () {
+  function store(key, val) {
+    try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); } catch (e) { return null; }
+  }
+
+  // Botones de copiar
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (ok, fail) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy') ? ok() : fail(); } catch (e) { fail(e); }
+      document.body.removeChild(ta);
+    });
+  }
+  document.querySelectorAll('.code').forEach(function (box) {
+    var btn = box.querySelector('button'), pre = box.querySelector('pre');
+    if (!btn || !pre) return;
+    btn.addEventListener('click', function () {
+      copyText(pre.textContent.trim()).then(function () {
+        btn.textContent = '¡Copiado!'; btn.classList.add('done');
+        setTimeout(function () { btn.textContent = 'Copiar'; btn.classList.remove('done'); }, 1400);
+      }, function () { btn.textContent = 'Selecciona y Ctrl+C'; });
+    });
+  });
+
+  // Casillas guardadas
+  var boxes = document.querySelectorAll('ul.check input[type=checkbox]');
+  boxes.forEach(function (cb, i) {
+    var key = 'guia3-check-' + i;
+    cb.checked = store(key) === '1';
+    cb.addEventListener('change', function () { store(key, cb.checked ? '1' : '0'); });
+  });
+
+  // IPs → comandos
+  var ip2 = document.getElementById('ip2'), ip3 = document.getElementById('ip3');
+  function refreshIps() {
+    var a = ip2.value.trim(), b = ip3.value.trim();
+    var peers = (a && b) ? a + ',' + b : (a || b || '');
+    document.querySelectorAll('pre[data-tpl]').forEach(function (pre) {
+      var t = pre.getAttribute('data-tpl');
+      t = t.replace('{PEERS}', peers || 'IP-NODO-02,IP-NODO-03')
+           .replace('{PEERSARG}', peers ? ' --peers ' + peers : '')
+           .replace('{IP2}', a || 'IP-NODO-02');
+      pre.textContent = t;
+    });
+  }
+  ip2.value = store('guia3-ip2') || ''; ip3.value = store('guia3-ip3') || '';
+  [ip2, ip3].forEach(function (el) {
+    el.addEventListener('input', function () { store('guia3-' + el.id, el.value); refreshIps(); });
+  });
+  refreshIps();
+
+  // Tema
+  var root = document.documentElement, saved = store('guia3-theme');
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = dark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next); store('guia3-theme', next);
+  });
+
+  // Resaltar sección activa
+  var links = document.querySelectorAll('nav.tabs a');
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        links.forEach(function (l) { l.classList.toggle('on', l.getAttribute('href') === '#' + e.target.id); });
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  document.querySelectorAll('main section').forEach(function (s) { io.observe(s); });
+})();
+</script>
+</body>
+</html>
