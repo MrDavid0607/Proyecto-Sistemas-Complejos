@@ -1,0 +1,4 @@
+nodes,which,tasks,makespan_sec,makespan_std,throughput_tps,speedup
+1,nodo-01,24,2.621,0.26,9.26,1.0
+2,"nodo-01,nodo-02",24,1.767,0.374,14.33,1.48
+3,"nodo-01,nodo-02,nodo-03",24,1.69,0.137,14.29,1.55

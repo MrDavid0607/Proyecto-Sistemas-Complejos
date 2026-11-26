@@ -1,0 +1,21 @@
+{
+  "uptime_sec": 155.9,
+  "tasks_submitted": 286,
+  "tasks_completed": 286,
+  "tasks_failed": 0,
+  "tasks_reassigned": 9,
+  "nodes_discovered": 5,
+  "failures_detected": 6,
+  "messages_sent": 576,
+  "bytes_sent": 147817,
+  "messages_received": 889,
+  "bytes_received": 218576,
+  "alerts_raised": 0,
+  "failure_rate": 0.0,
+  "avg_discovery_time_sec": 11.2008,
+  "avg_assignment_time_ms": 0.3753,
+  "avg_execution_time_sec": 0.2798,
+  "avg_total_time_sec": 0.8052,
+  "avg_recovery_time_sec": 0.5902,
+  "avg_latency_ms": 38.4065
+}

@@ -330,7 +330,7 @@ recibir mensajes durante unos segundos, lo que equivale a una caída o a una des
 Las tablas y gráficas de esta sección se generan automáticamente a partir de los datos medidos.
 
 % ARCHIVO GENERADO por experiments/report.py -- no editar a mano.
-% Corrida: 20261125-142252
+% Corrida: 20261126-104206
 
 \subsubsection{Entorno}
 
@@ -341,21 +341,21 @@ Las tablas y gráficas de esta sección se generan automáticamente a partir de 
 \begin{tabular}{|c|c|}
 \hline
 \textbf{Dato} & \textbf{Valor} \\ \hline
-Fecha & 2026-11-25 14:22:52 \\ \hline
-Entorno & 1 PC (3 procesos en localhost), prueba rapida \\ \hline
-Nodos & nodo-01 (127.0.0.1), nodo-03 (127.0.0.1), nodo-02 (127.0.0.1) \\ \hline
+Fecha & 2026-11-26 10:42:06 \\ \hline
+Entorno & 3 computadores en red local \\ \hline
+Nodos & nodo-01 (172.25.4.83), nodo-03 (172.25.5.66), nodo-02 (172.25.7.119) \\ \hline
 Equipo que ejecutó los experimentos & MSI (Windows-11-10.0.26200-SP0) \\ \hline
 CPU / RAM de ese equipo & 12 hilos / 15.7 GB \\ \hline
 Python & 3.13.7 \\ \hline
 Estrategia por defecto & weighted\_load \\ \hline
 Tamaño de tarea (puntos Monte Carlo) & 12,000,000 \\ \hline
-Modo & rápido (reducido) \\ \hline
+Modo & completo \\ \hline
 \end{tabular}}
 \caption{Entorno de la corrida experimental.}
 \label{tab:entorno}
 \end{table}
 
-\textbf{Nota:} esta corrida se hizo en un solo computador (tres procesos independientes en \texttt{localhost}): los nodos compiten por la misma CPU y la latencia es la de \emph{loopback}. Los experimentos se repiten en los tres computadores físicos para obtener los valores definitivos.
+Los experimentos se ejecutaron en \textbf{tres computadores físicos} conectados a la misma red local, un nodo por computador.
 
 \subsubsection{Latencia de comunicación}
 
@@ -366,8 +366,8 @@ Modo & rápido (reducido) \\ \hline
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
 \textbf{Nodo} & \textbf{Ping medio (ms)} & \textbf{Ping mín (ms)} & \textbf{Ping máx (ms)} & \textbf{Tarea mínima p50 (ms)} & \textbf{Tarea mínima p95 (ms)} \\ \hline
-nodo-02 & 0.164 & 0.141 & 0.194 & 1.012 & 1.792 \\ \hline
-nodo-03 & 0.344 & 0.32 & 0.376 & 0.915 & 1.415 \\ \hline
+nodo-02 & 61.116 & 30.221 & 136.877 & 7.733 & 26.384 \\ \hline
+nodo-03 & 24.971 & 16.617 & 38.265 & 9.414 & 21.802 \\ \hline
 \end{tabular}}
 \caption{Latencia hacia cada nodo.}
 \label{tab:latencia}
@@ -393,19 +393,24 @@ Se arranca un nodo nuevo, sin conocer a nadie, y se mide el tiempo hasta que des
 \begin{tabular}{|c|c|c|c|}
 \hline
 \textbf{Intento} & \textbf{Segundos} & \textbf{Vecinos encontrados} & \textbf{Completo} \\ \hline
-1 & 0.101 & 3 & sí \\ \hline
-2 & 0.101 & 3 & sí \\ \hline
-3 & 0.102 & 3 & sí \\ \hline
+1 & 30.034 & 2 & no \\ \hline
+2 & 30.038 & 2 & no \\ \hline
+3 & 30.043 & 2 & no \\ \hline
+4 & 0.203 & 3 & sí \\ \hline
+5 & 0.102 & 3 & sí \\ \hline
+6 & 0.101 & 3 & sí \\ \hline
+7 & 0.102 & 3 & sí \\ \hline
+8 & 0.101 & 3 & sí \\ \hline
 \end{tabular}}
 \caption{Tiempo de descubrimiento de un nodo nuevo.}
 \label{tab:descubrimiento}
 \end{table}
 
-Media: \textbf{0.10 s} (mín 0.10 s, máx 0.10 s); descubrimiento completo en 3/3 intentos. El intervalo de los \emph{beacons} es de 2 s, que acota el peor caso.
+Descubrimiento completo en 5/8 intentos. En los 5 intentos completos tardó \textbf{0.12 s} de media (mín 0.10 s, máx 0.20 s). En los 3 restantes se agotó el límite de 30 s sin encontrar a todos los vecinos: el \emph{broadcast} UDP no tiene garantía de entrega y en una red Wi-Fi puede perderse; por eso el sistema también admite vecinos semilla por IP (\texttt{--peers}).
 
 \subsubsection{Escalabilidad}
 
-\paragraph{Más nodos, misma carga.} Se ejecuta el mismo lote de 12 tareas restringiendo el número de nodos disponibles.
+\paragraph{Más nodos, misma carga.} Se ejecuta el mismo lote de 24 tareas restringiendo el número de nodos disponibles.
 
 \begin{table}[htbp]
 \centering
@@ -414,9 +419,9 @@ Media: \textbf{0.10 s} (mín 0.10 s, máx 0.10 s); descubrimiento completo en 3/
 \begin{tabular}{|c|c|c|c|c|}
 \hline
 \textbf{Nodos} & \textbf{Tiempo total (s)} & \textbf{$\pm$ $\sigma$} & \textbf{Tareas/s} & \textbf{Aceleración} \\ \hline
-1 & 1.373 & 0.0 & 8.74 & 1.0$\times$ \\ \hline
-2 & 0.821 & 0.0 & 14.62 & 1.67$\times$ \\ \hline
-3 & 0.879 & 0.0 & 13.66 & 1.56$\times$ \\ \hline
+1 & 2.621 & 0.26 & 9.26 & 1.0$\times$ \\ \hline
+2 & 1.767 & 0.374 & 14.33 & 1.48$\times$ \\ \hline
+3 & 1.69 & 0.137 & 14.29 & 1.55$\times$ \\ \hline
 \end{tabular}}
 \caption{Escalabilidad al aumentar el número de nodos.}
 \label{tab:escal-nodos}
@@ -429,7 +434,7 @@ Media: \textbf{0.10 s} (mín 0.10 s, máx 0.10 s); descubrimiento completo en 3/
 \label{fig:escal-nodos}
 \end{figure}
 
-Con 3 nodos la aceleración fue \textbf{1.56$\times$} (ideal: 3$\times$). La diferencia con el ideal se debe a la sobrecarga de coordinación (mensajes, ACK), a que las tareas se reparten en bloques discretos y a las diferencias de capacidad entre equipos.
+Con 3 nodos la aceleración fue \textbf{1.55$\times$} (ideal: 3$\times$). La diferencia con el ideal se debe a la sobrecarga de coordinación (mensajes, ACK), a que las tareas se reparten en bloques discretos y a las diferencias de capacidad entre equipos.
 
 \paragraph{Incremento progresivo de la carga.}
 
@@ -440,9 +445,11 @@ Con 3 nodos la aceleración fue \textbf{1.56$\times$} (ideal: 3$\times$). La dif
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
 \textbf{Tareas} & \textbf{Tiempo total (s)} & \textbf{Tareas/s} & \textbf{Latencia media (s)} & \textbf{p95 (s)} & \textbf{Tráfico enviado (KB/s)} & \textbf{CPU usada media (\%)} \\ \hline
-4 & 0.371 & 10.77 & 0.252 & 0.371 & 2.55 & nodo-01: 54.2, nodo-03: 17.9, nodo-02: 33.9 \\ \hline
-8 & 0.534 & 14.99 & 0.4 & 0.533 & 3.07 & nodo-01: 45.8, nodo-03: 35.6, nodo-02: 35.9 \\ \hline
-16 & 1.023 & 15.63 & 0.662 & 0.982 & 4.03 & nodo-01: 44.8, nodo-03: 53.3, nodo-02: 37.9 \\ \hline
+4 & 0.222 & 17.99 & 0.197 & 0.221 & 6.79 & nodo-01: 24.5, nodo-03: 77.0, nodo-02: 20.2 \\ \hline
+8 & 0.454 & 17.61 & 0.286 & 0.453 & 3.92 & nodo-01: 15.7, nodo-03: 77.0, nodo-02: 17.4 \\ \hline
+16 & 1.291 & 12.4 & 0.487 & 0.898 & 2.71 & nodo-01: 21.1, nodo-03: 41.8, nodo-02: 17.4 \\ \hline
+32 & 2.328 & 13.75 & 1.142 & 2.233 & 4.87 & nodo-01: 14.0, nodo-03: 52.6, nodo-02: 22.4 \\ \hline
+64 & 4.417 & 14.49 & 1.455 & 3.801 & 3.57 & nodo-01: 17.3, nodo-03: 28.1, nodo-02: 23.4 \\ \hline
 \end{tabular}}
 \caption{Respuesta del sistema al aumentar la carga.}
 \label{tab:escal-carga}
@@ -455,11 +462,11 @@ Con 3 nodos la aceleración fue \textbf{1.56$\times$} (ideal: 3$\times$). La dif
 \label{fig:escal-carga}
 \end{figure}
 
-Al multiplicar la carga por 4 (de 4 a 16 tareas) el tiempo total se multiplicó por 2.8 y el rendimiento pasó de 10.77 a 15.63 tareas/s. El tráfico de control fue de 4.03 KB/s con la mayor carga.
+Al multiplicar la carga por 16 (de 4 a 64 tareas) el tiempo total se multiplicó por 19.9 y el rendimiento pasó de 17.99 a 14.49 tareas/s. El tráfico de control fue de 3.57 KB/s con la mayor carga.
 
 \subsubsection{Comparación de estrategias de asignación}
 
-Mismo lote de 18 tareas de tamaño heterogéneo (0.5$\times$, 1$\times$ y 2$\times$) con cada estrategia. \emph{Desbalance} es el coeficiente de variación del número de tareas por nodo (0 = reparto perfecto).
+Mismo lote de 36 tareas de tamaño heterogéneo (0.5$\times$, 1$\times$ y 2$\times$) con cada estrategia. \emph{Desbalance} es el coeficiente de variación del número de tareas por nodo (0 = reparto perfecto).
 
 \begin{table}[htbp]
 \centering
@@ -468,12 +475,12 @@ Mismo lote de 18 tareas de tamaño heterogéneo (0.5$\times$, 1$\times$ y 2$\tim
 \begin{tabular}{|c|c|c|c|c|c|c|}
 \hline
 \textbf{Estrategia} & \textbf{Tiempo total (s)} & \textbf{$\pm$ $\sigma$} & \textbf{Latencia media (s)} & \textbf{p95 (s)} & \textbf{Desbalance} & \textbf{Tareas por nodo} \\ \hline
-$F(i,j)$ del diseño & 1.804 & 0.0 & 1.01 & 1.797 & 1.414 & nodo-01: 0.0, nodo-02: 18.0, nodo-03: 0.0 \\ \hline
-$F(i,j)$ + carga & 1.361 & 0.0 & 0.654 & 1.206 & 0.758 & nodo-01: 11.0, nodo-02: 0.0, nodo-03: 7.0 \\ \hline
-Menos cargado & 1.267 & 0.0 & 0.663 & 1.141 & 0.0 & nodo-01: 6.0, nodo-02: 6.0, nodo-03: 6.0 \\ \hline
-Menor latencia & 1.563 & 0.0 & 0.876 & 1.492 & 1.414 & nodo-01: 18.0, nodo-02: 0.0, nodo-03: 0.0 \\ \hline
-Round-robin & 1.192 & 0.0 & 0.667 & 1.11 & 0.0 & nodo-01: 6.0, nodo-02: 6.0, nodo-03: 6.0 \\ \hline
-Aleatoria & 1.145 & 0.0 & 0.639 & 1.021 & 0.36 & nodo-01: 9.0, nodo-02: 4.0, nodo-03: 5.0 \\ \hline
+$F(i,j)$ del diseño & 5.029 & 2.334 & 2.621 & 4.929 & 1.414 & nodo-01: 0.0, nodo-02: 24.0, nodo-03: 12.0 \\ \hline
+$F(i,j)$ + carga & 3.02 & 0.79 & 1.328 & 2.733 & 0.972 & nodo-01: 9.7, nodo-02: 20.7, nodo-03: 5.7 \\ \hline
+Menos cargado & 2.948 & 0.408 & 0.944 & 2.603 & 0.0 & nodo-01: 12.0, nodo-02: 12.0, nodo-03: 12.0 \\ \hline
+Menor latencia & 3.365 & 0.087 & 1.701 & 3.275 & 1.414 & nodo-01: 36.0, nodo-02: 0.0, nodo-03: 0.0 \\ \hline
+Round-robin & 2.983 & 0.126 & 0.99 & 2.812 & 0.0 & nodo-01: 12.0, nodo-02: 12.0, nodo-03: 12.0 \\ \hline
+Aleatoria & 3.078 & 0.34 & 1.011 & 2.855 & 0.203 & nodo-01: 9.7, nodo-02: 12.3, nodo-03: 14.0 \\ \hline
 \end{tabular}}
 \caption{Comparación de las seis estrategias de asignación.}
 \label{tab:estrategias}
@@ -486,9 +493,7 @@ Aleatoria & 1.145 & 0.0 & 0.639 & 1.021 & 0.36 & nodo-01: 9.0, nodo-02: 4.0, nod
 \label{fig:estrategias}
 \end{figure}
 
-La estrategia con menor tiempo total fue \textbf{Aleatoria} (1.145 s) y la de mayor tiempo \textbf{$F(i,j)$ del diseño} (1.804 s). La función $F(i,j)$ del diseño original tardó 1.804 s con un desbalance de 1.414. Esa función no considera la carga actual y la normalización min-max convierte diferencias mínimas de CPU y memoria entre nodos desocupados en diferencias de 0 a 1, por lo que puede concentrar tareas en pocos nodos. La variante \texttt{weighted\_load} (término de carga y normalización robusta) redujo el tiempo total en 25\,\% y el desbalance de 1.414 a 0.758, conservando el criterio multicriterio.
-
-\emph{Nota: $\sigma = 0$ porque en el modo rápido cada medición se hizo una sola vez.}
+La estrategia con menor tiempo total fue \textbf{Menos cargado} (2.948 s) y la de mayor tiempo \textbf{$F(i,j)$ del diseño} (5.029 s). La función $F(i,j)$ del diseño original tardó 5.029 s con un desbalance de 1.414. Esa función no considera la carga actual y la normalización min-max convierte diferencias mínimas de CPU y memoria entre nodos desocupados en diferencias de 0 a 1, por lo que puede concentrar tareas en pocos nodos. La variante \texttt{weighted\_load} (término de carga y normalización robusta) redujo el tiempo total en 40\,\% y el desbalance de 1.414 a 0.972, conservando el criterio multicriterio.
 
 \subsubsection{Tolerancia a fallos}
 
@@ -501,15 +506,17 @@ Un nodo cae 2 s después de empezar un lote de tareas (deja de enviar y recibir 
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline
 \textbf{Intento} & \textbf{Nodo caído} & \textbf{Tareas} & \textbf{Completadas} & \textbf{\% completado} & \textbf{Reasignadas} & \textbf{Detección (s)} & \textbf{Recuperación (s)} & \textbf{Tiempo total (s)} \\ \hline
-1 & nodo-02 & 12 & 12 & 100.0 & 2 & 4.89 & 1.26 & 8.14 \\ \hline
-2 & nodo-03 & 12 & 12 & 100.0 & 2 & 4.77 & 1.18 & 7.95 \\ \hline
+1 & nodo-02 & 20 & 20 & 100.0 & 10 & 4.25 & 4.16 & 10.41 \\ \hline
+2 & nodo-03 & 20 & 20 & 100.0 & 4 & 5.38 & 1.22 & 8.61 \\ \hline
+3 & nodo-02 & 20 & 20 & 100.0 & 15 & 4.31 & 6.06 & 12.38 \\ \hline
+4 & nodo-03 & 20 & 20 & 100.0 & 4 & 4.98 & 1.18 & 8.17 \\ \hline
 \end{tabular}}
 \caption{Caída de un nodo durante la ejecución de un lote.}
 \label{tab:fallos}
 \end{table}
 
 \begin{itemize}
-\item Detección de la caída: media \textbf{4.83 s} (requisito: $\leq$ 5 s de silencio; la detección corre cada 0.5 s).
+\item Detección de la caída: media \textbf{4.73 s} (requisito: $\leq$ 5 s de silencio; la detección corre cada 0.5 s).
 \item Tareas completadas pese a la caída: \textbf{100\,\%} (sin intervención manual).
 \item La \emph{recuperación} es el tiempo desde la primera reasignación hasta que la tarea reasignada termina (incluye volver a ejecutarla).
 \end{itemize}
@@ -523,7 +530,7 @@ Un nodo cae 2 s después de empezar un lote de tareas (deja de enviar y recibir 
 
 \subsubsection{Disponibilidad del servicio}
 
-Cada 0.5 s se envía una tarea de sondeo mientras nodo-02 falla entre $t = 8$ s y $t = 18$ s.
+Cada 0.5 s se envía una tarea de sondeo mientras nodo-02 falla entre $t = 15$ s y $t = 35$ s.
 
 \begin{table}[htbp]
 \centering
@@ -532,9 +539,9 @@ Cada 0.5 s se envía una tarea de sondeo mientras nodo-02 falla entre $t = 8$ s 
 \begin{tabular}{|c|c|}
 \hline
 \textbf{Métrica} & \textbf{Valor} \\ \hline
-Sondas enviadas & 60 \\ \hline
+Sondas enviadas & 140 \\ \hline
 Completadas & 100.0 \% \\ \hline
-Completadas en $\leq$ 3 s & 96.67 \% \\ \hline
+Completadas en $\leq$ 3 s & 97.86 \% \\ \hline
 \end{tabular}}
 \caption{Disponibilidad del servicio durante la falla de un nodo.}
 \label{tab:disponibilidad}
@@ -558,11 +565,11 @@ Las sondas enviadas al nodo caído no reciben \texttt{TASK\_ACK}; tras el \emph{
 \begin{tabular}{|c|c|}
 \hline
 \textbf{Métrica} & \textbf{Valor} \\ \hline
-Mensajes enviados / recibidos & 598 / 748 \\ \hline
-Tráfico enviado / recibido & 153 KB / 174 KB \\ \hline
-Duración & 143 s \\ \hline
-Tráfico medio enviado & 1.07 KB/s \\ \hline
-Tareas enviadas / completadas / reasignadas / fallidas & 286 / 286 / 4 / 0 \\ \hline
+Mensajes enviados / recibidos & 2124 / 3469 \\ \hline
+Tráfico enviado / recibido & 546 KB / 838 KB \\ \hline
+Duración & 468 s \\ \hline
+Tráfico medio enviado & 1.17 KB/s \\ \hline
+Tareas enviadas / completadas / reasignadas / fallidas & 1308 / 1308 / 39 / 0 \\ \hline
 \end{tabular}}
 \caption{Consumo del nodo que coordinó los experimentos.}
 \label{tab:recursos}
@@ -571,10 +578,10 @@ Tareas enviadas / completadas / reasignadas / fallidas & 286 / 286 / 4 / 0 \\ \h
 \subsubsection{Síntesis de los resultados}
 
 \begin{itemize}
-\item \textbf{Descubrimiento:} los nodos se encuentran solos en 0.10 s de media, sin configuración manual.
-\item \textbf{Escalabilidad:} con 3 nodos la aceleración fue 1.56$\times$ respecto a un solo nodo.
-\item \textbf{Estrategias:} la de menor tiempo total fue Aleatoria.
-\item \textbf{Fallos:} la caída se detectó en 4.83 s de media y se completó el 100\,\% de las tareas.
+\item \textbf{Descubrimiento:} los nodos se encuentran solos en 0.12 s de media en 5/8 intentos, sin configuración manual.
+\item \textbf{Escalabilidad:} con 3 nodos la aceleración fue 1.55$\times$ respecto a un solo nodo.
+\item \textbf{Estrategias:} la de menor tiempo total fue Menos cargado.
+\item \textbf{Fallos:} la caída se detectó en 4.73 s de media y se completó el 100\,\% de las tareas.
 \item \textbf{Disponibilidad:} se completó el 100.0\,\% de las sondas durante la falla de un nodo.
 \end{itemize}
 

@@ -1,0 +1,3 @@
+trial,victim,tasks,completed,completion_pct,reassigned,detection_sec,recovery_sec,makespan_sec
+1,nodo-02,12,12,100.0,2,4.88,1.53,8.41
+2,nodo-03,12,12,100.0,2,5.01,1.23,8.24

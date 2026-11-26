@@ -1,0 +1,3 @@
+node,ping_mean_ms,ping_min_ms,ping_max_ms,task_rtt_mean_ms,task_rtt_p50_ms,task_rtt_p95_ms
+nodo-02,114.122,97.779,139.371,21.242,7.997,41.999
+nodo-03,19.359,13.992,26.396,15.929,12.313,32.974

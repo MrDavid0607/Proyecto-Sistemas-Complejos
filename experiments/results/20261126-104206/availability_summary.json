@@ -1,0 +1,9 @@
+{
+  "victim": "nodo-02",
+  "fail_at_sec": 15,
+  "fail_seconds": 20,
+  "probes": 140,
+  "completed_pct": 100.0,
+  "within_sla_pct": 97.86,
+  "sla_sec": 3.0
+}

@@ -139,9 +139,18 @@ def build(run):
                   [[r["trial"], r["seconds"], r["peers_found"], "sí" if r["complete"] == "1" else "no"]
                    for r in discovery]))
         add("")
-        add(f"Media: **{sum(times) / len(times):.2f} s** (mín {min(times):.2f} s, máx {max(times):.2f} s); "
-            f"descubrimiento completo en {complete}/{len(discovery)} intentos. El intervalo de "
-            "los beacons es de 2 s, que acota el peor caso.\n")
+        ok_times = [num(r["seconds"]) for r in discovery if r["complete"] == "1"]
+        if ok_times and complete < len(discovery):
+            add(f"Descubrimiento completo en {complete}/{len(discovery)} intentos. En los {len(ok_times)} intentos "
+                f"completos tardó **{sum(ok_times) / len(ok_times):.2f} s** de media (mín {min(ok_times):.2f} s, "
+                f"máx {max(ok_times):.2f} s). En los {len(discovery) - complete} restantes se agotó el límite de "
+                f"{max(times):.0f} s sin encontrar a todos los vecinos: el *broadcast* UDP no tiene garantía de "
+                "entrega y en una red Wi-Fi puede perderse; por eso el sistema también admite vecinos semilla "
+                "por IP (`--peers`).\n")
+        else:
+            add(f"Media: **{sum(times) / len(times):.2f} s** (mín {min(times):.2f} s, máx {max(times):.2f} s); "
+                f"descubrimiento completo en {complete}/{len(discovery)} intentos. El intervalo de "
+                "los beacons es de 2 s, que acota el peor caso.\n")
 
     # ---- 4. Escalabilidad ------------------------------------------------
     scal = read(run, "scalability_nodes.csv")
@@ -462,9 +471,18 @@ def build_tex(run):
         add(ltable(["Intento", "Segundos", "Vecinos encontrados", "Completo"],
                    [[r["trial"], r["seconds"], r["peers_found"], "sí" if r["complete"] == "1" else "no"]
                     for r in discovery], "Tiempo de descubrimiento de un nodo nuevo.", "descubrimiento"))
-        add(f"Media: \\textbf{{{sum(times) / len(times):.2f} s}} (mín {min(times):.2f} s, máx "
-            f"{max(times):.2f} s); descubrimiento completo en {complete}/{len(discovery)} intentos. "
-            "El intervalo de los \\emph{beacons} es de 2 s, que acota el peor caso.\n")
+        ok_times = [num(r["seconds"]) for r in discovery if r["complete"] == "1"]
+        if ok_times and complete < len(discovery):
+            add(f"Descubrimiento completo en {complete}/{len(discovery)} intentos. En los {len(ok_times)} intentos "
+                f"completos tardó \\textbf{{{sum(ok_times) / len(ok_times):.2f} s}} de media (mín "
+                f"{min(ok_times):.2f} s, máx {max(ok_times):.2f} s). En los {len(discovery) - complete} restantes "
+                f"se agotó el límite de {max(times):.0f} s sin encontrar a todos los vecinos: el "
+                "\\emph{broadcast} UDP no tiene garantía de entrega y en una red Wi-Fi puede perderse; por eso el "
+                "sistema también admite vecinos semilla por IP (\\texttt{--peers}).\n")
+        else:
+            add(f"Media: \\textbf{{{sum(times) / len(times):.2f} s}} (mín {min(times):.2f} s, máx "
+                f"{max(times):.2f} s); descubrimiento completo en {complete}/{len(discovery)} intentos. "
+                "El intervalo de los \\emph{beacons} es de 2 s, que acota el peor caso.\n")
 
     scal = read(run, "scalability_nodes.csv")
     load = read(run, "scalability_load.csv")
@@ -597,8 +615,9 @@ def build_tex(run):
     add("\\subsubsection{Síntesis de los resultados}\n")
     add("\\begin{itemize}")
     if discovery:
-        add(f"\\item \\textbf{{Descubrimiento:}} los nodos se encuentran solos en {sum(times) / len(times):.2f} s "
-            "de media, sin configuración manual.")
+        good = [t for t, r in zip(times, discovery) if r["complete"] == "1"] or times
+        add(f"\\item \\textbf{{Descubrimiento:}} los nodos se encuentran solos en {sum(good) / len(good):.2f} s "
+            f"de media en {complete}/{len(discovery)} intentos, sin configuración manual.")
     if scal:
         add(f"\\item \\textbf{{Escalabilidad:}} con {tex(scal[-1]['nodes'])} nodos la aceleración fue "
             f"{tex(scal[-1]['speedup'])}$\\times$ respecto a un solo nodo.")
@@ -615,6 +634,86 @@ def build_tex(run):
     return "\n".join(out) + "\n"
 
 
+def to_html(markdown_text):
+    """Convierte el informe (Markdown simple) en una página HTML autocontenida (imágenes incrustadas)."""
+    import base64
+    import html as htmllib
+    import re
+
+    def inline(text):
+        text = htmllib.escape(text, quote=False)
+        text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
+        text = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
+        text = re.sub(r"\*([^*]+)\*", r"<i>\1</i>", text)
+        return text
+
+    def image(match):
+        alt, path = match.group(1), match.group(2)
+        full = os.path.join(DOCS, path)
+        if not os.path.exists(full):
+            return ""
+        data = base64.b64encode(open(full, "rb").read()).decode("ascii")
+        return f'<figure><img alt="{htmllib.escape(alt)}" src="data:image/png;base64,{data}"></figure>'
+
+    out, lines, i = [], markdown_text.split("\n"), 0
+    in_list = False
+    while i < len(lines):
+        line = lines[i].rstrip()
+        if in_list and not line.startswith("- "):
+            out.append("</ul>")
+            in_list = False
+        if not line:
+            i += 1
+            continue
+        m = re.match(r"!\[([^\]]*)\]\(([^)]+)\)$", line)
+        if m:
+            out.append(image(m))
+        elif line.startswith("|"):
+            rows = []
+            while i < len(lines) and lines[i].startswith("|"):
+                rows.append([c.strip() for c in lines[i].strip().strip("|").split("|")])
+                i += 1
+            head, body = rows[0], rows[2:]
+            out.append("<div class='tw'><table><thead><tr>" + "".join(f"<th>{inline(c)}</th>" for c in head)
+                       + "</tr></thead><tbody>"
+                       + "".join("<tr>" + "".join(f"<td>{inline(c)}</td>" for c in r) + "</tr>" for r in body)
+                       + "</tbody></table></div>")
+            continue
+        elif line.startswith("# "):
+            out.append(f"<h1>{inline(line[2:])}</h1>")
+        elif line.startswith("## "):
+            out.append(f"<h2>{inline(line[3:])}</h2>")
+        elif line.startswith("### "):
+            out.append(f"<h3>{inline(line[4:])}</h3>")
+        elif line.startswith("- "):
+            if not in_list:
+                out.append("<ul>")
+                in_list = True
+            out.append(f"<li>{inline(line[2:])}</li>")
+        else:
+            out.append(f"<p>{inline(line)}</p>")
+        i += 1
+    if in_list:
+        out.append("</ul>")
+    css = (":root{--bg:#f4f6fa;--card:#fff;--ink:#172033;--muted:#5b667a;--line:#dfe4ee;--accent:#2563eb}"
+           "@media(prefers-color-scheme:dark){:root{--bg:#0b1020;--card:#131a2e;--ink:#e6ebf5;--muted:#9aa6bd;"
+           "--line:#25304a;--accent:#5b8cff}}"
+           "body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,Segoe UI,sans-serif}"
+           "main{max-width:980px;margin:0 auto;padding:24px 16px 60px}"
+           "h1{font-size:1.7rem}h2{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);color:var(--accent)}"
+           "h3{margin-top:22px}.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.9rem;"
+           "background:var(--card);border:1px solid var(--line);border-radius:8px}"
+           "th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}"
+           "th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}"
+           "figure{margin:14px 0;text-align:center}img{max-width:100%;background:#fff;border-radius:8px;"
+           "border:1px solid var(--line)}code{background:var(--card);border:1px solid var(--line);border-radius:5px;"
+           "padding:0 5px;font-size:.88em}")
+    return ("<!doctype html><html lang='es'><head><meta charset='utf-8'>"
+            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+            "<title>Informe experimental - ComplexNet API</title><style>" + css + "</style></head><body><main>"
+            + "\n".join(out) + "</main></body></html>")
+
+
 def main():
     run = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else latest_run()
     os.makedirs(DOCS, exist_ok=True)
@@ -622,6 +721,8 @@ def main():
     target = os.path.join(DOCS, "INFORME_EXPERIMENTAL.md")
     with open(target, "w", encoding="utf-8") as handle:
         handle.write(text)
+    with open(os.path.join(DOCS, "INFORME_EXPERIMENTAL.html"), "w", encoding="utf-8") as handle:
+        handle.write(to_html(text))
     os.makedirs(INFORME, exist_ok=True)
     tex_target = os.path.join(INFORME, "fase3_resultados.tex")
     with open(tex_target, "w", encoding="utf-8", newline="\n") as handle:
