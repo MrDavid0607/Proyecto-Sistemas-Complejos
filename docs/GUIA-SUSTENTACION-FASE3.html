@@ -82,23 +82,23 @@
 <!-- 4 -->
 <div class="step" data-i="4">
   <div class="head"><div class="n">4</div><h2>Aplicación 2 · Procesamiento distribuido</h2><label><input type="checkbox"> Hecho</label></div>
-  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\distributed_processing\app.py --id nodo-01 --no-local{ARG}">.\.venv\Scripts\python.exe applications\distributed_processing\app.py --id nodo-01 --no-local</pre><button type="button">Copiar</button></div>
-  <div class="row see"><b>Verás</b><span>Conteo de palabras repartido en fragmentos entre los otros dos PCs y luego el cálculo de π. Termina sola.</span></div>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\distributed_processing\app.py --id nodo-01 --no-local --hold 90{ARG}">.\.venv\Scripts\python.exe applications\distributed_processing\app.py --id nodo-01 --no-local --hold 90</pre><button type="button">Copiar</button></div>
+  <div class="row see"><b>Verás</b><span>Conteo de palabras repartido en fragmentos entre los otros dos PCs y luego el cálculo de π. Al terminar, el panel sigue 90 s: abre <b>http://localhost:8000</b> y mira la tabla “Tareas recientes”. Ctrl+C para cerrar antes.</span></div>
   <div class="row say"><b>Di</b><span>“Map: cada PC cuenta las palabras de su parte. Reduce: mi nodo suma los resultados. <i>--no-local</i> hace que todo el trabajo lo hagan los otros dos computadores.”</span></div>
 </div>
 
 <!-- 5 -->
 <div class="step" data-i="5">
   <div class="head"><div class="n">5</div><h2>Aplicación 3 · Inteligencia artificial</h2><label><input type="checkbox"> Hecho</label></div>
-  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local{ARG}">.\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local</pre><button type="button">Copiar</button></div>
-  <div class="row see"><b>Verás</b><span>Entrenamiento repartido en 12 fragmentos; al final los pesos aprendidos frente a los reales y el R². Termina sola.</span></div>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local --hold 90{ARG}">.\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local --hold 90</pre><button type="button">Copiar</button></div>
+  <div class="row see"><b>Verás</b><span>Entrenamiento repartido en 12 fragmentos; al final los pesos aprendidos frente a los reales y el R². Al terminar, el panel sigue 90 s: abre <b>http://localhost:8000</b> y mira la tabla “Tareas recientes”. Ctrl+C para cerrar antes.</span></div>
   <div class="row say"><b>Di</b><span>“Cada PC calcula XᵀX y Xᵀy de su fragmento y yo los sumo. Da el mismo resultado que entrenar todo en un equipo, pero por la red solo viajan números pequeños.”</span></div>
 </div>
 
 <!-- 6 -->
 <div class="step" data-i="6">
   <div class="head"><div class="n">6</div><h2>Demo de fallo (la más importante)</h2><label><input type="checkbox"> Hecho</label></div>
-  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local --simulate-seconds 6{ARG}">.\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local --simulate-seconds 6</pre><button type="button">Copiar</button></div>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local --simulate-seconds 6 --hold 90{ARG}">.\.venv\Scripts\python.exe applications\ai_application\app.py --id nodo-01 --no-local --simulate-seconds 6 --hold 90</pre><button type="button">Copiar</button></div>
   <div class="row"><b>Haz</b><span>Mientras corre, un compañero cierra su nodo con <kbd>Ctrl</kbd>+<kbd>C</kbd>.</span></div>
   <div class="row see"><b>Verás</b><span>El fragmento del nodo caído se reasigna al otro nodo y el resultado final sale igual.</span></div>
   <div class="row say"><b>Di</b><span>“El fallo se detecta en 5 s o menos y las tareas se reasignan solas. No se pierde trabajo mientras haya un nodo vivo.”</span></div>

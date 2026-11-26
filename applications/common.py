@@ -7,8 +7,12 @@ panel HTTP opcional) y usa la API de alto nivel para repartir su trabajo.
 import argparse
 import os
 import sys
+import time
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+HOLD_SECONDS = 0.0
+HOLD_PORT = 8000
+
+ROOT =os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 from complexnet import Node, NodeConfig  # noqa: E402
@@ -35,6 +39,9 @@ def add_node_arguments(parser):
     parser.add_argument("--expected-peers", type=int, default=2,
                         help="vecinos que se esperan antes de empezar")
     parser.add_argument("--log-dir", default=os.path.join(ROOT, "logs"))
+    parser.add_argument("--hold", type=float, default=0.0,
+                        help="segundos que el nodo y su panel siguen activos al terminar "
+                             "(para mostrar la tabla de tareas)")
     return parser
 
 
@@ -54,6 +61,9 @@ def parse_peers(text, default_port):
 
 def start_node(args, console_log=True):
     """Crea y conecta el nodo de la aplicación; espera a los vecinos esperados."""
+    global HOLD_SECONDS, HOLD_PORT
+    HOLD_SECONDS = getattr(args, "hold", 0.0) or 0.0
+    HOLD_PORT = args.http_port or 8000
     broadcast = None if args.broadcast.lower() in ("", "none", "no") else args.broadcast
     config = NodeConfig(
         port=args.port,
@@ -81,6 +91,15 @@ def start_node(args, console_log=True):
 
 
 def stop_node(node, server):
+    # --hold: mantiene el nodo y el panel vivos al terminar para poder mostrar las tareas.
+    if HOLD_SECONDS > 0 and server:
+        print(f"\nTrabajo terminado. El panel sigue activo {HOLD_SECONDS:g} s "
+              f"(http://localhost:{HOLD_PORT}); "
+              "Ctrl+C para cerrar antes.", flush=True)
+        try:
+            time.sleep(HOLD_SECONDS)
+        except KeyboardInterrupt:
+            pass
     if server:
         server.stop()
     node.disconnect()
