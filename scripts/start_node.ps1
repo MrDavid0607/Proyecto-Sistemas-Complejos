@@ -54,6 +54,9 @@ Write-Host "Nodo: $Id | IP detectada: $detected | Panel: http://localhost:$HttpP
 Write-Host "Ctrl+C para detenerlo." -ForegroundColor Green
 Write-Host ""
 
+$peersArg = @()
+if ($Peers -ne "") { $peersArg = @("--peers", $Peers) }   # un argumento vacío se pierde en PowerShell
+
 $env:PYTHONPATH = "src"
-& .\.venv\Scripts\python.exe -m complexnet --id $Id --port $Port --broadcast auto --peers $Peers `
+& .\.venv\Scripts\python.exe -m complexnet --id $Id --port $Port --broadcast auto @peersArg `
     --http-port $HttpPort --bandwidth $Bandwidth --strategy $Strategy --log-dir logs @ipArg
