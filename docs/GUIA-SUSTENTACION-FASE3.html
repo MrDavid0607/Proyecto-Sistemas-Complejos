@@ -105,8 +105,21 @@
 </div>
 
 <!-- 7 -->
+<div class="step" data-i="9">
+  <div class="head"><div class="n">7</div><h2>Experimentos con los 3 PCs</h2><label><input type="checkbox"> Hecho</label></div>
+  <div class="rule" style="margin:6px 0 10px">Sin ningún nodo ni aplicación corriendo en mi PC. Los compañeros <b>no cierran</b> sus ventanas.</div>
+  <div class="row"><b>Completa</b><span>10–12 min (números definitivos):</span></div>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0{ARG}">.\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0</pre><button type="button">Copiar</button></div>
+  <div class="row"><b>Corta</b><span>~3 min (solo para comprobar):</span></div>
+  <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0 --quick{ARG}">.\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0 --quick</pre><button type="button">Copiar</button></div>
+  <div class="row"><b>Luego</b><span>Cuando termine, generar el informe:</span></div>
+  <div class="code"><pre>.\.venv\Scripts\python.exe experiments\report.py</pre><button type="button">Copiar</button></div>
+  <div class="row see"><b>Verás</b><span>Latencia, descubrimiento, escalabilidad, 6 estrategias, tolerancia a fallos y disponibilidad. Después aviso a Claude para actualizar el informe con estos números.</span></div>
+</div>
+
+<!-- 8 -->
 <div class="step" data-i="7">
-  <div class="head"><div class="n">7</div><h2>Mostrar los resultados</h2><label><input type="checkbox"> Hecho</label></div>
+  <div class="head"><div class="n">8</div><h2>Mostrar los resultados</h2><label><input type="checkbox"> Hecho</label></div>
   <div class="row"><b>Haz</b><span>Abre el informe PDF en la sección 12 (Fase 3): tablas y gráficas de latencia, escalabilidad, estrategias y fallos.</span></div>
   <div class="row say"><b>Di</b><span>“Con 3 nodos medimos latencia, escalabilidad, tolerancia a fallos y disponibilidad. Comparamos 6 estrategias de asignación y mejoramos la del diseño agregando la carga del nodo.”</span></div>
 </div>
@@ -125,16 +138,6 @@
     </div>
     <div class="code"><pre data-tpl="powershell -ExecutionPolicy Bypass -File .\scripts\start_node.ps1 -Id nodo-01 -Peers {PEERS}">powershell -ExecutionPolicy Bypass -File .\scripts\start_node.ps1 -Id nodo-01 -Peers IP-NODO-02,IP-NODO-03</pre><button type="button">Copiar</button></div>
     <small class="muted">Con las IPs escritas, los comandos de las aplicaciones llevan <i>--peers</i> automáticamente.</small>
-  </div>
-</details>
-
-<details>
-  <summary>Antes de sustentar (opcional): experimentos con datos reales</summary>
-  <div>
-    <p>Tarda ~3 min la corta, ~10–12 min la completa. Sin ningún nodo ni aplicación corriendo en mi PC.</p>
-    <div class="code"><pre data-tpl=".\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0 --quick{ARG}">.\.venv\Scripts\python.exe experiments\run_experiments.py --id nodo-01 --http-port 0 --quick</pre><button type="button">Copiar</button></div>
-    <div class="code"><pre>.\.venv\Scripts\python.exe experiments\report.py</pre><button type="button">Copiar</button></div>
-    <small class="muted">Después aviso a Claude para actualizar el informe con los números reales.</small>
   </div>
 </details>
 
