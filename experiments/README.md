@@ -22,7 +22,9 @@ de estrategias de asignación, tolerancia a fallos y disponibilidad.
 .\.venv\Scripts\python.exe experiments\report.py
 ```
 
-   Crea `docs/pruebas/INFORME_EXPERIMENTAL.md` y las gráficas en `docs/pruebas/figuras/`.
+   Crea `docs/pruebas/INFORME_EXPERIMENTAL.md` y las gráficas en `docs/pruebas/figuras/`. También
+   actualiza `docs/informe/fase3_resultados.tex` (tablas y figuras en LaTeX para la sección 12 del
+   informe del proyecto; ver `docs/informe/LEEME.md`).
 
 Opciones útiles: `--only strategies,fault` (solo algunos experimentos), `--task-points N`
 (duración de cada tarea) y `--environment "texto"` (descripción del entorno para el informe).

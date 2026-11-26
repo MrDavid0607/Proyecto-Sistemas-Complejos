@@ -1,0 +1,385 @@
+% =============================================================================
+% Sección 12 del informe del proyecto: Descripción del Proyecto -- Fase 3
+%
+% Uso: en el documento principal, antes de \end{document}, escribir
+%         \input{seccion_fase3}
+% Requiere solo el paquete graphicx (ya usado en las secciones anteriores).
+% Las tablas y figuras de resultados se generan con
+%         python experiments/report.py
+% en el archivo fase3_resultados.tex (se incluye al final de esta sección).
+% =============================================================================
+
+\section{Descripción del Proyecto -- Fase 3}
+
+\subsection{Objetivo de la fase}
+
+En la Fase 2 se construyó el núcleo de ComplexNet API y se validó con tres nodos en contenedores
+Docker dentro de un mismo computador. La Fase 3 convierte ese núcleo en una plataforma utilizable:
+se ejecuta sobre \textbf{tres computadores físicos} conectados por una red local, ofrece una
+\textbf{API documentada para desarrolladores}, incluye \textbf{tres aplicaciones descentralizadas}
+construidas sobre ella, un \textbf{panel de monitoreo} del clúster y una \textbf{evaluación
+experimental} de latencia, escalabilidad, disponibilidad, tolerancia a fallos y estrategias de
+asignación de tareas.
+
+\subsection{Qué se agregó respecto a la Fase 2}
+
+El núcleo (mensajes JSON sobre UDP, descubrimiento por \emph{beacons}, detección de fallos por
+silencio, reasignación de tareas y reloj lógico de Lamport) se mantiene. Lo nuevo es lo siguiente:
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{0.2\textwidth}|p{0.33\textwidth}|p{0.33\textwidth}|}
+\hline
+\textbf{Aspecto} & \textbf{Fase 2} & \textbf{Fase 3} \\ \hline
+Despliegue & Tres contenedores Docker en un computador, red virtual & Tres computadores físicos en una red local real \\ \hline
+Descubrimiento & \emph{Broadcast} a una subred fija de Docker & Detección automática de la subred y vecinos semilla por IP \\ \hline
+Uso del sistema & Script de demostración & API para desarrolladores y manual \\ \hline
+Aplicaciones & Una tarea de regresión lineal de ejemplo & Tres aplicaciones descentralizadas \\ \hline
+Monitoreo & Terminal y un archivo JSON por nodo & Panel web en vivo con alertas \\ \hline
+Planificación & Una función de aptitud $F(i,j)$ & Seis estrategias intercambiables en caliente \\ \hline
+Capacidad del nodo & Sin límite de tareas simultáneas & Ranuras de ejecución (\emph{slots}) y cola \\ \hline
+Validación & Pruebas funcionales (42) & Pruebas (66) y experimentos con informe \\ \hline
+\end{tabular}
+\caption{Cambios de la Fase 3 respecto a la Fase 2.}
+\label{tab:fase2-fase3}
+\end{table}
+
+\subsection{Despliegue en tres computadores}
+
+\paragraph{¿Cómo se conectan los computadores?}
+Los tres equipos se conectan a la \textbf{misma red local} (mismo Wi-Fi o router; también sirve el
+punto de acceso de un celular). No se usa ningún servidor central ni se necesita internet: cada
+nodo envía los mensajes directamente a los demás mediante \textbf{UDP sobre IP}, por el puerto
+\texttt{9999}. El panel web usa el puerto \texttt{8000} (TCP) y es solo para observar y administrar.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|c|c|p{0.5\textwidth}|}
+\hline
+\textbf{Equipo} & \textbf{Nodo} & \textbf{Qué ejecuta} \\ \hline
+Computador 1 & \texttt{nodo-01} & Un nodo, las aplicaciones y los experimentos \\ \hline
+Computador 2 & \texttt{nodo-02} & Solo el nodo \\ \hline
+Computador 3 & \texttt{nodo-03} & Solo el nodo \\ \hline
+\end{tabular}
+\caption{Distribución de nodos en los computadores.}
+\label{tab:tres-pcs}
+\end{table}
+
+\paragraph{Descubrimiento en la red real.}
+\begin{enumerate}
+\item Cada nodo emite cada 2 s un mensaje \texttt{RESOURCE\_BEACON} por \emph{broadcast} UDP, es decir,
+a la dirección que reciben todos los equipos de la subred. El nodo calcula esa dirección a partir de
+su propia IP y máscara de red (opción \texttt{--broadcast auto}).
+\item El \emph{beacon} informa el identificador del nodo, su IP, su CPU libre, su memoria libre, su ancho
+de banda y cuántas tareas tiene en curso.
+\item Al recibir el \emph{beacon} de un nodo desconocido, el receptor lo registra en su \texttt{PeerTable}
+y le responde con un \emph{beacon} directo. Así, basta con que uno de los dos oiga al otro para que
+ambos se descubran.
+\item Si la red bloquea el \emph{broadcast} (algunas redes institucionales lo filtran), cada nodo puede
+iniciarse con las IP de sus vecinos (\texttt{--peers}) y los mensajes viajan de forma directa. Otra
+alternativa es conectar los tres equipos al punto de acceso de un celular.
+\end{enumerate}
+
+\paragraph{Mensajes del protocolo.}
+Todos los mensajes son JSON con un encabezado (identificador único, emisor, tipo, marca de tiempo y
+reloj de Lamport) y una carga útil. El tamaño máximo es de 60 KB, de modo que cada mensaje cabe en un
+datagrama UDP.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|p{0.55\textwidth}|}
+\hline
+\textbf{Mensaje} & \textbf{Función} \\ \hline
+\texttt{RESOURCE\_BEACON} & Presencia y recursos del nodo (cada 2 s) \\ \hline
+\texttt{PING} / \texttt{PONG} & Medición de la latencia (RTT) entre dos nodos \\ \hline
+\texttt{TASK\_SUBMIT} & Envío de una tarea al nodo elegido \\ \hline
+\texttt{TASK\_ACK} & Confirmación de recepción de la tarea \\ \hline
+\texttt{TASK\_RESULT} & Resultado de la tarea o error \\ \hline
+\texttt{ALERT} & Alerta difundida a todos los nodos (Fase 3) \\ \hline
+\end{tabular}
+\caption{Mensajes intercambiados entre los nodos.}
+\label{tab:mensajes}
+\end{table}
+
+\paragraph{Puesta en marcha.}
+Cada computador ejecuta un único comando, que crea el entorno de Python, instala las dependencias,
+abre el puerto en el cortafuegos y arranca el nodo:
+
+\begin{verbatim}
+.\scripts\start_node.ps1 -Id nodo-02
+\end{verbatim}
+
+\subsection{API para desarrolladores}
+
+La clase \texttt{Node} es la puerta de entrada: oculta el descubrimiento, la planificación, la
+comunicación y la recuperación ante fallos. Una aplicación necesita pocas líneas:
+
+\begin{verbatim}
+from complexnet import Node, Task
+
+with Node("nodo-01", broadcast_address="auto") as node:
+    node.wait_for_peers(2)
+    tarea = Task("regresion_lineal", {"n_samples": 10000},
+                 requirements={"cpu": 1, "memory": 256})
+    resultado = node.submit(tarea)      # el planificador elige el nodo
+\end{verbatim}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{0.3\textwidth}|p{0.6\textwidth}|}
+\hline
+\textbf{Método} & \textbf{Descripción} \\ \hline
+\texttt{connect()}, \texttt{disconnect()} & Une el nodo a la red o lo detiene (también como \texttt{with}) \\ \hline
+\texttt{wait\_for\_peers(n)} & Espera hasta tener $n$ vecinos activos \\ \hline
+\texttt{submit(tarea)} & Envía una tarea y devuelve su resultado (o la tarea, sin esperar) \\ \hline
+\texttt{map(nombre, lista)} & Una tarea por elemento; devuelve los resultados en orden \\ \hline
+\texttt{map\_tasks(...)} & Igual que \texttt{map}, pero devuelve las tareas con sus tiempos y el nodo ejecutor \\ \hline
+\texttt{broadcast(tipo, datos)} & Envía un mensaje a todos los vecinos activos \\ \hline
+\texttt{raise\_alert(nivel, texto)} & Registra una alerta y la difunde a toda la red \\ \hline
+\texttt{on\_event(funcion)} & Ejecuta una función por cada evento del nodo (fallos, tareas, descubrimiento) \\ \hline
+\texttt{set\_strategy(nombre)} & Cambia la estrategia de asignación en caliente \\ \hline
+\texttt{simulate\_failure(s)} & Simula una caída del nodo durante $s$ segundos (pruebas) \\ \hline
+\texttt{status()} & Estado completo: recursos, vecinos, tareas, alertas y métricas \\ \hline
+\end{tabular}
+\caption{Métodos principales de la API.}
+\label{tab:api}
+\end{table}
+
+Una \texttt{Task} lleva un nombre, sus parámetros y requisitos (CPU libre mínima, memoria mínima y,
+opcionalmente, una lista de nodos permitidos). Los tipos de tarea disponibles son los siguientes:
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|p{0.55\textwidth}|}
+\hline
+\textbf{Tarea} & \textbf{Descripción} \\ \hline
+\texttt{regresion\_lineal} & Regresión lineal completa en un nodo (Fase 2) \\ \hline
+\texttt{normal\_equations} & Estadísticos de un fragmento de datos para la regresión distribuida \\ \hline
+\texttt{evaluate\_model} & Evaluación de un modelo sobre un fragmento de datos \\ \hline
+\texttt{monte\_carlo\_pi} & Estimación de $\pi$ por el método de Monte Carlo \\ \hline
+\texttt{word\_count} & Conteo de palabras de un fragmento de texto \\ \hline
+\end{tabular}
+\caption{Tipos de tarea incluidos.}
+\label{tab:tareas}
+\end{table}
+
+Agregar una tarea nueva consiste en escribir una función de Python que reciba un diccionario y
+devuelva otro, y registrarla en el módulo de ejecutores. La referencia completa está en el manual del
+desarrollador (\texttt{docs/api/MANUAL\_DESARROLLADOR.md}).
+
+\subsection{Aplicaciones descentralizadas}
+
+Las tres aplicaciones usan únicamente la API anterior; ninguna depende de un servidor central.
+
+\subsubsection{Aplicación 1: monitoreo distribuido con alertas}
+
+Vigila el clúster con la información que ya circula en los \emph{beacons} y genera alertas que se
+\textbf{difunden a todos los nodos}, de modo que cada nodo conserva su propio registro de alertas.
+
+\begin{itemize}
+\item \textbf{Crítica:} un nodo pasa a \texttt{OFFLINE}.
+\item \textbf{Informativa:} un nodo vuelve a estar \texttt{ONLINE}.
+\item \textbf{Advertencia:} CPU libre menor a un umbral, memoria libre menor a un umbral o latencia
+mayor a un umbral (configurables).
+\end{itemize}
+
+Además guarda una serie de tiempo con la CPU, la memoria y la latencia de cada nodo, y las alertas
+aparecen en el panel web.
+
+\subsubsection{Aplicación 2: procesamiento distribuido}
+
+Realiza dos trabajos de tipo \emph{map-reduce} repartidos por la red:
+
+\begin{enumerate}
+\item \textbf{Análisis de archivos:} los archivos de texto de una carpeta se parten en fragmentos; cada
+nodo cuenta las palabras de su fragmento (\emph{map}) y el nodo coordinador combina los conteos
+(\emph{reduce}).
+\item \textbf{Cálculo colaborativo:} estimación de $\pi$ por Monte Carlo. Cada nodo lanza puntos al azar
+en el cuadrado unidad y cuenta los que caen dentro del círculo; con el total se obtiene
+$\pi \approx 4 \cdot \mathrm{dentro} / \mathrm{total}$.
+\end{enumerate}
+
+Si un nodo cae durante el trabajo, sus fragmentos se reasignan y el resultado no cambia.
+
+\subsubsection{Aplicación 3: inteligencia artificial distribuida}
+
+Entrena una \textbf{regresión lineal múltiple} repartiendo los datos entre los nodos. La idea es que
+la solución de mínimos cuadrados se puede calcular a partir de sumas parciales. Si el conjunto de
+datos se divide en fragmentos $(X_k, y_k)$, cada nodo calcula $X_k^{\top}X_k$ y $X_k^{\top}y_k$ de su
+fragmento y el coordinador los suma y resuelve:
+
+\begin{equation}
+\hat{w} = \Bigl(\sum_k X_k^{\top}X_k\Bigr)^{-1} \sum_k X_k^{\top}y_k
+\end{equation}
+
+El resultado es exactamente el de entrenar con todos los datos en un solo equipo. Cada fragmento se
+genera dentro del nodo que lo procesa a partir de una semilla, por lo que por la red solo viajan
+parámetros pequeños y estadísticos. El modelo se evalúa después en fragmentos nuevos, también
+repartidos, calculando el coeficiente de determinación
+$R^2 = 1 - \mathrm{SSE}/\mathrm{SST}$. Si un nodo falla durante el entrenamiento, su fragmento se
+reasigna a otro y los pesos finales son los mismos.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|p{0.28\textwidth}|p{0.62\textwidth}|}
+\hline
+\textbf{Requisito del taller} & \textbf{Cómo se cumple} \\ \hline
+Distribución de datos & Fragmentos generados en cada nodo a partir de una semilla \\ \hline
+Asignación de recursos & El planificador reparte cada fragmento según CPU, memoria, ancho de banda, latencia, reputación y carga \\ \hline
+Información intercambiada & Estadísticos $X_k^{\top}X_k$, $X_k^{\top}y_k$ y sumas de cuadrados, no los datos \\ \hline
+Métricas & Error de los pesos, $R^2$, MSE, tiempos y fragmentos por nodo \\ \hline
+Tolerancia a fallos & Reasignación automática del fragmento del nodo caído \\ \hline
+\end{tabular}
+\caption{Aplicación de inteligencia artificial: cumplimiento de los requisitos.}
+\label{tab:ia}
+\end{table}
+
+\subsection{Estrategias de asignación de tareas}
+
+El planificador de la Fase 2 implementa la función de aptitud del diseño (sección 9):
+
+\begin{equation}
+F(i,j) = 0.40\,C' + 0.40\,M' + 0.10\,B' + 0.05\,R - 0.05\,(1 - L')
+\end{equation}
+
+donde $C'$, $M'$, $B'$ y $L'$ son la CPU libre, la memoria libre, el ancho de banda y la latencia
+(esta última con normalización inversa) normalizados entre los candidatos, y $R$ es la reputación del
+nodo. Al probarla en los experimentos se observó un problema: la normalización min-max convierte
+diferencias mínimas entre nodos casi idénticos (por ejemplo, 1\,\% de CPU) en diferencias de 0 a 1, y
+la función no conoce cuántas tareas tiene ya cada nodo, así que podía enviar todas las tareas al mismo
+nodo.
+
+Para resolverlo se agregó la variante \texttt{weighted\_load}, que usa por defecto:
+
+\begin{itemize}
+\item \textbf{Normalización robusta:} $x' = (x - \min x) / \max(\max x - \min x,\ \delta)$, donde
+$\delta$ es un rango mínimo significativo ($\delta_C = 20$ puntos de CPU libre, $\delta_M = \delta_B = 20\,\%$
+del mayor valor y $\delta_L = 5$ ms). Las diferencias de ruido ya no se amplifican.
+\item \textbf{Término de carga:} se resta $0.30\,Q'$, donde $Q'$ es el número de tareas en curso del
+nodo (incluidas las que el propio coordinador le acaba de enviar) normalizado entre los candidatos; los
+pesos de CPU y memoria bajan a 0.25 para que la suma siga siendo 1.
+\end{itemize}
+
+\begin{equation}
+F_{L}(i,j) = 0.25\,C' + 0.25\,M' + 0.10\,B' + 0.05\,R - 0.05\,(1 - L') - 0.30\,Q'
+\end{equation}
+
+Además se implementaron cuatro estrategias de referencia para compararlas:
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|p{0.6\textwidth}|}
+\hline
+\textbf{Estrategia} & \textbf{Criterio} \\ \hline
+\texttt{weighted} & $F(i,j)$ del diseño \\ \hline
+\texttt{weighted\_load} & $F_L(i,j)$: robusta y con carga (por defecto) \\ \hline
+\texttt{least\_loaded} & El nodo con menos tareas en curso \\ \hline
+\texttt{lowest\_latency} & El nodo con menor latencia medida \\ \hline
+\texttt{round\_robin} & Reparto cíclico entre los candidatos aptos \\ \hline
+\texttt{random} & Un candidato apto al azar \\ \hline
+\end{tabular}
+\caption{Estrategias de asignación implementadas.}
+\label{tab:estrategias-lista}
+\end{table}
+
+En todas, el conjunto de candidatos se filtra primero con los requisitos de la tarea
+($C_i \geq C_{\mathrm{req}}$ y $M_i \geq M_{\mathrm{req}}$) y solo se consideran los nodos activos.
+
+\paragraph{Capacidad de los nodos.}
+Cada nodo ejecuta como máximo \texttt{slots} tareas a la vez (2 por defecto); las demás esperan en cola.
+Esto modela un computador con CPU limitada y hace que el reparto de carga sea relevante.
+
+\subsection{Panel de monitoreo del clúster}
+
+Cada nodo sirve una página web (\texttt{http://IP-DEL-NODO:8000}) que muestra, en tiempo real, los
+nodos del clúster con su estado, CPU, memoria y latencia, la evolución de la latencia, las tareas y sus
+resultados, las alertas y el registro de eventos. El mismo servicio expone una API HTTP: consulta del
+estado (\texttt{GET /status}, \texttt{GET /events}), envío de tareas (\texttt{POST /tasks}) y
+administración para los experimentos (\texttt{POST /admin/fail} para simular una caída remota y
+\texttt{POST /admin/strategy} para cambiar la estrategia).
+
+\subsection{Metodología experimental}
+
+Los experimentos se ejecutan con \texttt{experiments/run\_experiments.py} desde el computador 1 y el
+informe se genera con \texttt{experiments/report.py} a partir de los archivos CSV resultantes. La carga
+de trabajo son tareas de Monte Carlo (intensivas en CPU), y cada medición se repite varias veces para
+reportar la media y la desviación estándar. Se evalúan:
+
+\begin{itemize}
+\item \textbf{Latencia:} RTT de \texttt{PING}/\texttt{PONG} y tiempo de una tarea mínima.
+\item \textbf{Tiempo de descubrimiento:} desde que arranca un nodo nuevo hasta conocer a los demás.
+\item \textbf{Escalabilidad:} el mismo lote con 1, 2 y 3 nodos (aceleración) y cargas crecientes.
+\item \textbf{Estrategias de asignación:} el mismo lote heterogéneo con las seis estrategias.
+\item \textbf{Tolerancia a fallos:} un nodo cae a mitad de un lote y se mide la detección, la
+recuperación y el porcentaje de tareas completadas.
+\item \textbf{Disponibilidad:} se envía una tarea de sondeo cada 0.5 s mientras un nodo falla.
+\end{itemize}
+
+Las fallas se inyectan con el endpoint \texttt{/admin/fail} del nodo víctima, que deja de enviar y
+recibir mensajes durante unos segundos, lo que equivale a una caída o a una desconexión de la red.
+
+\subsection{Resultados experimentales}
+
+Las tablas y gráficas de esta sección se generan automáticamente a partir de los datos medidos.
+
+\input{fase3_resultados}
+
+\subsection{Pruebas}
+
+El proyecto incluye 66 pruebas automáticas (\texttt{python -m pytest tests}): 42 de las fases anteriores
+(planificador, mensajes, reloj de Lamport, tabla de vecinos, detector de fallos y escenarios de
+integración con tres nodos reales) y 24 de la Fase 3, que verifican:
+
+\begin{itemize}
+\item las seis estrategias y su respeto por los requisitos de la tarea;
+\item la normalización robusta (sin amplificar diferencias mínimas) y el ejemplo numérico del diseño;
+\item que la suma de los estadísticos de los fragmentos equivale a la regresión sobre todos los datos;
+\item la API (\texttt{map} conserva el orden, el requisito de nodos, el cambio de estrategia, \texttt{on\_event});
+\item que una alerta llega al registro de todos los nodos;
+\item que un nodo caído pasa a \texttt{OFFLINE}, se recupera y que sus tareas se reasignan;
+\item que las ranuras limitan la ejecución simultánea y la detección de la subred.
+\end{itemize}
+
+\subsection{Qué se puede demostrar en la sustentación}
+
+\begin{itemize}
+\item Tres computadores físicos descubriéndose automáticamente en la misma red.
+\item El panel web mostrando los tres nodos, sus recursos, la latencia y las tareas en vivo.
+\item Las tres aplicaciones: alertas de monitoreo, procesamiento \emph{map-reduce} y regresión
+lineal distribuida.
+\item La caída de un nodo durante una tarea: alerta crítica, reasignación automática y resultado
+correcto.
+\item El cambio de estrategia de asignación en caliente y su efecto en el reparto.
+\item Las métricas y gráficas de los experimentos.
+\end{itemize}
+
+\subsection{Limitaciones}
+
+\begin{itemize}
+\item El ancho de banda de cada nodo es un valor declarado, no medido.
+\item UDP no garantiza la entrega ni hay retransmisión: la pérdida de un mensaje se maneja con el
+\emph{timeout} de la confirmación y la reasignación de la tarea.
+\item El nodo que envía una tarea la coordina; si ese nodo cae, pierde el estado de sus tareas, porque
+no hay persistencia.
+\item La sincronización es un orden lógico de eventos (Lamport); no hay exclusión mutua distribuida.
+\item Los \emph{endpoints} de administración no tienen autenticación (uso de laboratorio).
+\item Las tareas deben ser lo bastante grandes para amortizar el costo de la comunicación.
+\end{itemize}
+
+\subsection{Conclusión de la fase}
+
+Con esta fase se completa ComplexNet API: una red de tres computadores físicos que se descubren solos,
+reparten el trabajo con reglas locales, ejecutan aplicaciones de monitoreo, procesamiento y
+aprendizaje automático distribuido, detectan fallos y se recuperan sin intervención humana ni
+coordinador central. La API permite a otros desarrolladores crear nuevas aplicaciones con pocas líneas,
+y la evaluación experimental respalda el comportamiento del sistema en latencia, escalabilidad,
+disponibilidad y tolerancia a fallos. Del análisis de las estrategias de asignación resultó una mejora
+al modelo original (normalización robusta y término de carga) que evita concentrar las tareas en un
+solo nodo.
